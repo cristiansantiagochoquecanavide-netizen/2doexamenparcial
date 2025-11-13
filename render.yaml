@@ -18,23 +18,12 @@ services:
         value: https://Exam-2-SI1.onrender.com
       - key: FRONTEND_URL
         value: https://Exam-2-SI1.onrender.com
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_HOST
-        value: dpg-d49v497diees73cp4q9g-a.render.com
-      - key: DB_PORT
-        value: "5432"
-      - key: DB_DATABASE
-        value: appwebcargahoraria
-      - key: DB_USERNAME
-        value: appwebcargahoraria_user
-      - key: DB_PASSWORD
-        value: LnTqy6RdoYCcPnINtjsyE5Ck4bnjfxxv
-      - key: DB_SCHEMA
-        value: carga_horaria
-      - key: DB_SSLMODE
-        value: require
       - key: LOG_LEVEL
         value: info
       - key: VITE_API_URL
         value: https://Exam-2-SI1.onrender.com/api
+      - key: DB_CONNECTION
+        fromService:
+          type: postgres
+          name: appwebcargahoraria-db
+          property: connectionString
