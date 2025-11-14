@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
 WORKDIR /app
 
@@ -8,16 +8,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     libpq-dev \
     postgresql-client \
+    npm \
     unzip \
     && docker-php-ext-install pdo pdo_pgsql \
-    && a2enmod rewrite \
-    && a2enmod headers \
     && rm -rf /var/lib/apt/lists/*
-
-# Instalar Node.js y npm desde el repositorio oficial
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -25,7 +19,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copiar archivos del proyecto
 COPY . .
 
-# Crear directorios necesarios con permisos
+# Crear directorios necesarios
 RUN mkdir -p storage/logs bootstrap/cache && chmod -R 777 storage bootstrap
 
 # Instalar dependencias PHP (sin ejecutar migraciones)
@@ -34,20 +28,11 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Instalar y compilar frontend
 RUN npm install && npm run build
 
-# Configurar Apache para Laravel
-RUN echo '<VirtualHost *:8080>' > /etc/apache2/sites-available/000-default.conf && \
-    echo '    DocumentRoot /app/public' >> /etc/apache2/sites-available/000-default.conf && \
-    echo '    <Directory /app/public>' >> /etc/apache2/sites-available/000-default.conf && \
-    echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf && \
-    echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
-    echo '    </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
-    echo '</VirtualHost>'
-
 # Hacer ejecutables los scripts
 RUN chmod +x start-server.sh init-database.sh
 
-# Exponer puerto 8080 (usado por Render)
-EXPOSE 8080
+# Exponer puerto
+EXPOSE 10000
 
 # Comando de inicio
 CMD ["bash", "start-server.sh"]
