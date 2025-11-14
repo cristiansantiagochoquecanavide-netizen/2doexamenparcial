@@ -2,11 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-// ===============================
-// RUTA SPA (React controla todo)
-// ===============================
-Route::view('/{path?}', 'app')
-    ->where('path', '.*')
-    ->name('app');
+Route::get('/{any}', function () {
+    return file_get_contents(public_path('index.html'));
+})->where('any', '.*');
 
 
