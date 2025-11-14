@@ -47,8 +47,8 @@ RUN a2enmod rewrite
 # Copiar todo Laravel excepto node_modules
 COPY . .
 
-# Copiar assets generados POR VITE (NO build)
-COPY --from=vite-build /app/public /var/www/html/public
+# Copiar assets generados POR VITE y el archivo index.php
+COPY public /var/www/html/public
 
 # Copiar vendor del build PHP
 COPY --from=php-build /app/vendor /var/www/html/vendor
