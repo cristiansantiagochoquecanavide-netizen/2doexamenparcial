@@ -1,55 +1,50 @@
-# ===============================
-# ETAPA 1: PHP DEPENDENCIES
-# ===============================
+# Etapa 1: Builder de PHP
 FROM composer:2 AS php-build
 
 WORKDIR /app
 
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
+# Copiar TODO el proyecto (incluye artisan)
 COPY . .
 
+# Crear directorios requeridos ANTES de composer
 RUN mkdir -p bootstrap/cache storage/logs storage/framework \
     && chmod -R 777 bootstrap storage
 
+# Instalar dependencias PHP
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# ===============================
-# ETAPA 2: VITE + REACT BUILD
-# ===============================
+
+# Etapa 2: Builder de Vite
 FROM node:18 AS vite-build
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install
-
 COPY . .
+
+RUN npm install
 RUN npm run build
 
 
-# ===============================
-# ETAPA 3: FINAL IMAGE (Apache + PHP)
-# ===============================
+# Etapa 3: Imagen final
 FROM php:8.2-apache
 
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    ghostscript \
     && docker-php-ext-install pdo pdo_pgsql
 
 RUN a2enmod rewrite
 
-# Copiar código fuente SIN node_modules ni vendor
+# Copiar código del proyecto
 COPY . .
 
-# Copiar Vite build desde etapa 2
+# Copiar archivos construidos
 COPY --from=vite-build /app/public/build ./public/build
-
-# Copiar vendor desde etapa 1
 COPY --from=php-build /app/vendor ./vendor
 
+# Permisos
 RUN mkdir -p bootstrap/cache storage \
     && chmod -R 777 bootstrap storage
 
