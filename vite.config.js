@@ -18,5 +18,11 @@ export default defineConfig({
         outDir: 'public', // 👈 Compila React dentro de /public
         emptyOutDir: true, // Limpia carpeta antes de compilar
         manifest: true,
+        rollupOptions: {
+            input: {
+                main: 'resources/js/app.jsx',
+                index: 'resources/views/index.html', // 👈 Generar index.html
+            },
+        },
     },
 });
