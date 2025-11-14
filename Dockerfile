@@ -1,11 +1,8 @@
-# ============================
-#  🟦 STAGE 1: Build de Vite
-# ============================
+# Etapa 1: Build de Vite
 FROM node:18 AS vite-build
-
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install
 
 COPY . .
@@ -13,44 +10,38 @@ RUN npm run build
 
 
 
-# ===================================
-#  🟧 STAGE 2: Imagen final de Laravel
-# ===================================
+# Etapa 2: PHP + Apache
 FROM php:8.2-apache
-
-# Instalar extensiones necesarias para Laravel + PostgreSQL
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpq-dev \
-    postgresql-client \
-    unzip \
-    && docker-php-ext-install pdo pdo_pgsql opcache \
-    && rm -rf /var/lib/apt/lists/*
-
-# Habilitar mod_rewrite para Laravel
-RUN a2enmod rewrite
-
-# Configurar Apache
-COPY ./deploy/apache.conf /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
 
-# Copiar proyecto completo
+# Extensiones
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    unzip \
+    git \
+    && docker-php-ext-install pdo pdo_pgsql
+
+# Activar mod_rewrite
+RUN a2enmod rewrite
+
+# Copiar proyecto
 COPY . .
 
-# Copiar el build de Vite a la carpeta pública
+# Copiar build de Vite
 COPY --from=vite-build /app/public/build ./public/build
 
-# Instalar Composer (producción)
+# Crear directorios necesarios antes de Composer
+RUN mkdir -p bootstrap/cache \
+    && chmod -R 777 storage bootstrap/cache
+
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Crear permisos
-RUN mkdir -p storage/logs bootstrap/cache && chmod -R 777 storage bootstrap/cache
+# Script start-server
+RUN chmod +x start-server.sh
 
-# Exponer puerto (Render usa 10000)
 EXPOSE 10000
 
-# Iniciar Apache
-CMD ["apache2-foreground"]
+CMD ["bash", "start-server.sh"]
