@@ -1,3 +1,12 @@
+<IfModule mod_mime.c>
+    AddType application/javascript js mjs
+    AddType application/json json
+    AddType text/css css
+    AddType image/svg+xml svg
+    AddType font/woff2 woff2
+    AddType font/woff woff
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
