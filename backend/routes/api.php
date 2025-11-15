@@ -30,6 +30,31 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 
+// RUTA DE PRUEBA - LOGIN sin base de datos
+Route::post('/auth/login-test', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    // Credenciales de prueba
+    if ($credentials['email'] === 'test@example.com' && $credentials['password'] === 'password') {
+        return response()->json([
+            'access_token' => 'test-token-' . uniqid(),
+            'token_type' => 'Bearer',
+            'user' => [
+                'id' => 1,
+                'email' => 'test@example.com',
+                'name' => 'Usuario de Prueba',
+            ]
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Credenciales inválidas'
+    ], 401);
+});
+
 // CU2: Ver usuarios (público)
 Route::get('/usuarios', [UsuarioController::class, 'index']);
 
