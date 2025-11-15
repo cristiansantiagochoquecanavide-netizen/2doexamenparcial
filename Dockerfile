@@ -5,8 +5,8 @@ FROM composer:2 AS php-build
 
 WORKDIR /app
 
-# Copiar PRIMERO todo el proyecto para que artisan esté disponible
-COPY . .
+# Copiar backend 
+COPY backend . 
 
 # Crear directorios requeridos ANTES de composer install
 RUN mkdir -p bootstrap/cache storage/logs storage/framework
@@ -23,12 +23,17 @@ FROM node:18 AS vite-build
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# Copiar archivos necesarios para NPM desde frontend
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
 
-COPY resources ./resources
-COPY vite.config.js .
+# Copiar recursos y configuración de Vite
+COPY frontend/resources ./resources
+COPY frontend/vite.config.js .
+COPY frontend/tailwind.config.js .
+COPY frontend/postcss.config.js .
 
+# Generar los assets con Vite
 RUN npm run build
 
 
@@ -52,13 +57,16 @@ RUN a2enmod mime
 # Configurar Apache para servir desde /var/www/html/public
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Copiar Laravel excepto node_modules
-COPY . .
+# Copiar backend
+COPY backend .
 
-# Copiar SOLO la carpeta build de Vite
+# Copiar frontend public
+COPY frontend/public ./public
+
+# Copiar SOLO la carpeta build de Vite generada
 COPY --from=vite-build /app/public/build ./public/build
 
-# Copiar vendor
+# Copiar vendor generado
 COPY --from=php-build /app/vendor ./vendor
 
 RUN mkdir -p bootstrap/cache storage \

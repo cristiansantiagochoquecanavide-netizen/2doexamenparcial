@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: exam-2-si1-1
+    runtime: docker
+    region: oregon
+    plan: starter
+    buildCommand: "docker build -t exam-2-si1-1 ."
+    startCommand: "bash start-server.sh"
+    healthCheckPath: /
+    healthCheckInterval: 300
+    envVars:
+      - key: APP_NAME
+        value: AppWebCargaHoraria
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        value: base64:VPuXqWlyLax+DN2E/gda6wTVtlES3EkJJquGkv3HE1U=
+      - key: APP_URL
+        value: https://exam-2-si1-1.onrender.com
+      - key: FRONTEND_URL
+        value: https://exam-2-si1-1.onrender.com
+      - key: LOG_LEVEL
+        value: error
+      - key: VITE_API_URL
+        value: https://exam-2-si1-1.onrender.com/api
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_SCHEMA
+        value: carga_horaria
+      - key: DB_SSLMODE
+        value: require
+      - fromGroup: db-env-vars
+    databasePostgres:
+      name: appwebcargahoraria-db
+      version: "15"
+      ipAllowList: []
+    databases:
+      - name: appwebcargahoraria-db
