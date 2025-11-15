@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /*.php$
+Disallow: /storage/
+
+Sitemap: /sitemap.xml
