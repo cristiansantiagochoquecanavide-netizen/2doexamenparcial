@@ -8,12 +8,12 @@ WORKDIR /app
 # Copiar PRIMERO todo el proyecto para que artisan esté disponible
 COPY . .
 
-# Instalar dependencias de Laravel
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Crear directorios requeridos y ajustar permisos
+# Crear directorios requeridos ANTES de composer install
 RUN mkdir -p bootstrap/cache storage/logs storage/framework
 RUN chmod -R 777 bootstrap storage
+
+# Instalar dependencias de Laravel
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 
 # -------------------------
