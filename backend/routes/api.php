@@ -30,10 +30,42 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout']);
 Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 
-// RUTA DE PRUEBA - LOGIN sin base de datos
+// RUTA DE LOGIN - Busca en la base de datos
+Route::post('/auth/login-db', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => 'required',
+        'password' => 'required',
+    ]);
+
+    // Buscar usuario por email o ci (usamos email como campo de búsqueda)
+    $user = \App\Models\User::where('email', $credentials['email'])
+        ->orWhere('email', $credentials['email']) // CI puede estar en email
+        ->first();
+
+    if ($user && \Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
+        // Crear token
+        $token = $user->createToken('auth-token')->plainTextToken;
+        
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+            ]
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Credenciales inválidas'
+    ], 401);
+});
+
+// RUTA DE PRUEBA - LOGIN sin base de datos (para testing)
 Route::post('/auth/login-test', function (Request $request) {
     $credentials = $request->validate([
-        'email' => 'required|email',
+        'email' => 'required',
         'password' => 'required',
     ]);
 
