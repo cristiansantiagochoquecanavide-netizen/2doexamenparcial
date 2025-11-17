@@ -6,422 +6,388 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AsignacionHorario;
 use App\Models\Asistencia;
-use App\Models\Inasistencia;
-use App\Models\Infraestructura;
-use App\Models\SesionAsistencia;
+use App\Models\Aula;
 use App\Models\Bitacora;
+use App\Models\Docente;
+use App\Models\Grupo;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportesController extends Controller
 {
     /**
      * CU17: Generar Reportes en PDF/Excel
-     * 
-     * Genera reportes de:
-     * 1. Asignaciones de Carga Horaria
-     * 2. Asistencia Docente
-     * 3. Inasistencias y Justificaciones
-     * 4. Ocupación de Aulas
      */
     public function generar(Request $request)
     {
         try {
-            $usuario = auth('sanctum')->user();
-            
-            // Validar que solo Administrador y Coordinador Académico puedan generar reportes
-            $rol = $usuario->rol->nombre ?? null;
-            if (!in_array($rol, ['Administrador', 'Coordinador Académico'])) {
-                return response()->json(['message' => 'No tienes permiso para generar reportes'], 403);
-            }
+            $tipoReporte = $request->input('tipo_reporte', 'horarios_semanales');
+            $formato = $request->input('formato', 'pdf');
+            $previsualizar = $request->input('previsualizar', false);
+            $periodoAcademico = $request->input('periodo_academico');
+            $docenteId = $request->input('docente_id');
+            $grupoId = $request->input('grupo_id');
 
-            // Validar parámetros
-            $validated = $request->validate([
-                'tipo_reporte' => 'required|in:asignaciones,asistencia,inasistencias,ocupacion_aulas',
-                'formato' => 'required|in:json,csv,pdf,excel',
-                'periodo_academico' => 'nullable|string',
-                'filtros' => 'nullable|array'
+            // Log para depuración
+            \Log::info('Generando reporte', [
+                'tipo' => $tipoReporte,
+                'formato' => $formato,
+                'periodo' => $periodoAcademico,
+                'docente' => $docenteId,
+                'grupo' => $grupoId
             ]);
-
-            $tipoReporte = $validated['tipo_reporte'];
-            $formato = $validated['formato'];
-            $periodo = $validated['periodo_academico'] ?? null;
-            $filtros = $validated['filtros'] ?? [];
 
             // Obtener datos según tipo de reporte
             $datos = match($tipoReporte) {
-                'asignaciones' => $this->obtenerAsignaciones($periodo, $filtros),
-                'asistencia' => $this->obtenerAsistencia($periodo, $filtros),
-                'inasistencias' => $this->obtenerInasistencias($periodo, $filtros),
-                'ocupacion_aulas' => $this->obtenerOcupacionAulas($periodo, $filtros),
+                'horarios_semanales' => $this->obtenerHorariosSemanales($periodoAcademico, $docenteId),
+                'asistencia_docente' => $this->obtenerAsistenciaDocente($periodoAcademico, $docenteId, $grupoId),
+                'aulas_disponibles' => $this->obtenerAulasDisponibles(),
                 default => []
             };
 
-            // Registrar en bitácora
-            Bitacora::create([
-                'codigo_usuario' => $usuario->id,
-                'accion' => "Generar reporte: {$tipoReporte}",
-                'descripcion' => "Reporte generado en formato {$formato}",
-                'tipo_evento' => 'GENERAR_REPORTE',
-                'fecha_hora' => now(),
-                'tabla_afectada' => 'Reportes',
-                'detalles' => json_encode([
-                    'tipo_reporte' => $tipoReporte,
-                    'formato' => $formato,
-                    'periodo' => $periodo,
-                    'registros_generados' => count($datos)
-                ])
-            ]);
+            \Log::info('Datos obtenidos', ['cantidad' => count($datos)]);
 
-            // Preparar respuesta según formato
-            if ($formato === 'json') {
+            // Si es previsualización, retornar JSON
+            if ($previsualizar) {
                 return response()->json([
                     'success' => true,
+                    'data' => $datos,
                     'tipo_reporte' => $tipoReporte,
-                    'formato' => 'json',
-                    'registros' => count($datos),
-                    'datos' => $datos,
-                    'descarga_url' => null,
-                    'generado_en' => now(),
-                    'usuario' => $usuario->usuario
+                    'cantidad' => count($datos)
                 ]);
             }
 
-            if ($formato === 'csv') {
-                return $this->exportarCSV($tipoReporte, $datos);
-            }
+            // Registrar en bitácora
+            Bitacora::registrar(
+                'Reportes',
+                "Generó reporte: {$tipoReporte}",
+                auth()->id(),
+                ['tipo' => $tipoReporte, 'formato' => $formato]
+            );
 
+            // Generar reporte según formato
             if ($formato === 'pdf') {
-                return $this->exportarPDF($tipoReporte, $datos);
+                return $this->generarPDF($tipoReporte, $datos);
+            } else {
+                return $this->generarExcel($tipoReporte, $datos);
             }
 
-            if ($formato === 'excel') {
-                return $this->exportarExcel($tipoReporte, $datos);
-            }
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['message' => 'Validación fallida', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error generando reporte', 'error' => $e->getMessage()], 500);
+            \Log::error('Error en generar reporte: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar reporte: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
         }
     }
 
     /**
-     * Obtener datos de Asignaciones de Carga Horaria
+     * Obtener Horarios Semanales
      */
-    private function obtenerAsignaciones($periodo = null, $filtros = [])
+    private function obtenerHorariosSemanales($periodo = null, $docenteId = null)
     {
-        $query = AsignacionHorario::query()
-            ->with([
+        try {
+            \Log::info('obtenerHorariosSemanales llamado', [
+                'periodo' => $periodo,
+                'docenteId' => $docenteId
+            ]);
+
+            $query = AsignacionHorario::with([
                 'docente.usuario.persona',
-                'materia',
-                'grupo',
+                'grupo.materia',
+                'aula.infraestructura',
                 'horario'
             ]);
 
-        if ($periodo) {
-            $query->where('periodo_academico', $periodo);
-        }
+            if ($periodo) {
+                \Log::info('Filtrando por periodo', ['periodo' => $periodo]);
+                $query->where('periodo_academico', $periodo);
+            }
 
-        if (isset($filtros['codigo_doc'])) {
-            $query->where('codigo_doc', $filtros['codigo_doc']);
-        }
+            if ($docenteId) {
+                \Log::info('Filtrando por docente', ['docenteId' => $docenteId]);
+                $query->where('codigo_doc', $docenteId);
+            }
 
-        if (isset($filtros['codigo_grupo'])) {
-            $query->where('codigo_grupo', $filtros['codigo_grupo']);
-        }
+            // Verificar si hay registros sin filtro de estado
+            $totalSinFiltro = AsignacionHorario::count();
+            \Log::info('Total de asignaciones en BD', ['total' => $totalSinFiltro]);
 
-        return $query->get()->map(function ($asignacion) {
-            return [
-                'id' => $asignacion->id,
-                'codigo_doc' => $asignacion->codigo_doc,
-                'docente_nombre' => optional($asignacion->docente->usuario->persona)->nombre_completo ?? 'N/A',
-                'codigo_materia' => $asignacion->codigo_materia,
-                'materia_nombre' => optional($asignacion->materia)->nombre ?? 'N/A',
-                'codigo_grupo' => $asignacion->codigo_grupo,
-                'grupo_nombre' => optional($asignacion->grupo)->nombre ?? 'N/A',
-                'horas_semanales' => $asignacion->horas_semanales,
-                'horario_clase' => optional($asignacion->horario)->horario_clase ?? 'N/A',
-                'periodo_academico' => $asignacion->periodo_academico,
-                'fecha_asignacion' => $asignacion->created_at,
-            ];
-        })->toArray();
-    }
+            // Verificar con solo filtros de periodo y docente
+            $testQuery = clone $query;
+            $countConFiltros = $testQuery->count();
+            \Log::info('Asignaciones con filtros (sin estado)', ['count' => $countConFiltros]);
 
-    /**
-     * Obtener datos de Asistencia Docente
-     */
-    private function obtenerAsistencia($periodo = null, $filtros = [])
-    {
-        $query = Asistencia::query()
-            ->with('docente.usuario.persona');
+            // Ahora aplicar filtro de estado (ACTIVO en mayúsculas)
+            $query->where('estado', 'ACTIVO');
+            
+            $asignaciones = $query->get();
+            \Log::info('Asignaciones obtenidas', ['cantidad' => $asignaciones->count()]);
 
-        if ($periodo) {
-            $year = substr($periodo, 0, 4);
-            $query->whereRaw("EXTRACT(YEAR FROM fecha)::integer = ?", [$year]);
-        }
+            if ($asignaciones->isEmpty()) {
+                return [];
+            }
 
-        if (isset($filtros['codigo_doc'])) {
-            $query->whereHas('docente', function ($q) use ($filtros) {
-                $q->where('codigo', $filtros['codigo_doc']);
-            });
-        }
+            return $asignaciones->map(function ($asignacion) {
+                $docente = $asignacion->docente;
+                $nombreDocente = 'Sin docente';
+                
+                if ($docente && $docente->usuario && $docente->usuario->persona) {
+                    $persona = $docente->usuario->persona;
+                    $nombreDocente = trim($persona->nombre . ' ' . ($persona->apellido_paterno ?? '') . ' ' . ($persona->apellido_materno ?? ''));
+                }
 
-        if (isset($filtros['estado'])) {
-            $query->where('estado', $filtros['estado']);
-        }
+                // Formatear horario como en CU11
+                $horario = '';
+                if ($asignacion->horario) {
+                    $horaInicio = $asignacion->horario->hora_inicio ? 
+                        (is_string($asignacion->horario->hora_inicio) ? 
+                            substr($asignacion->horario->hora_inicio, 0, 5) : 
+                            $asignacion->horario->hora_inicio->format('H:i')) 
+                        : 'No definido';
+                    
+                    $horaFin = $asignacion->horario->hora_fin ? 
+                        (is_string($asignacion->horario->hora_fin) ? 
+                            substr($asignacion->horario->hora_fin, 0, 5) : 
+                            $asignacion->horario->hora_fin->format('H:i')) 
+                        : 'No definido';
+                    
+                    $horario = $horaInicio . ' - ' . $horaFin;
+                }
 
-        return $query->orderBy('fecha', 'desc')->get()->map(function ($asistencia) {
-            return [
-                'id' => $asistencia->id,
-                'codigo_doc' => $asistencia->docente->codigo ?? 'N/A',
-                'docente_nombre' => optional($asistencia->docente->usuario->persona)->nombre_completo ?? 'N/A',
-                'fecha' => $asistencia->fecha,
-                'hora_entrada' => $asistencia->hora_entrada,
-                'hora_salida' => $asistencia->hora_salida,
-                'estado' => $asistencia->estado,
-                'ubicacion' => $asistencia->ubicacion ?? 'N/A',
-                'metodo_registro' => $asistencia->metodo_registro ?? 'N/A',
-            ];
-        })->toArray();
-    }
-
-    /**
-     * Obtener datos de Inasistencias y Justificaciones
-     */
-    private function obtenerInasistencias($periodo = null, $filtros = [])
-    {
-        $query = Inasistencia::query()
-            ->with([
-                'docente.usuario.persona',
-                'justificativo'
-            ]);
-
-        if ($periodo) {
-            $year = substr($periodo, 0, 4);
-            $query->whereRaw("EXTRACT(YEAR FROM fecha_inasistencia)::integer = ?", [$year]);
-        }
-
-        if (isset($filtros['codigo_doc'])) {
-            $query->whereHas('docente', function ($q) use ($filtros) {
-                $q->where('codigo', $filtros['codigo_doc']);
-            });
-        }
-
-        if (isset($filtros['estado_justificacion'])) {
-            $query->where('estado_justificacion', $filtros['estado_justificacion']);
-        }
-
-        return $query->orderBy('fecha_inasistencia', 'desc')->get()->map(function ($inasistencia) {
-            return [
-                'id' => $inasistencia->id,
-                'codigo_doc' => $inasistencia->docente->codigo ?? 'N/A',
-                'docente_nombre' => optional($inasistencia->docente->usuario->persona)->nombre_completo ?? 'N/A',
-                'fecha_inasistencia' => $inasistencia->fecha_inasistencia,
-                'motivo' => $inasistencia->motivo,
-                'justificado' => $inasistencia->estado_justificacion,
-                'tipo_justificativo' => optional($inasistencia->justificativo)->tipo_justificativo ?? 'N/A',
-                'estado_resolucion' => optional($inasistencia->justificativo)->estado_resolucion ?? 'PENDIENTE',
-                'fecha_resolucion' => optional($inasistencia->justificativo)->fecha_resolucion ?? null,
-                'observaciones' => $inasistencia->observaciones ?? 'N/A',
-            ];
-        })->toArray();
-    }
-
-    /**
-     * Obtener datos de Ocupación de Aulas
-     */
-    private function obtenerOcupacionAulas($periodo = null, $filtros = [])
-    {
-        // Obtener ocupación de aulas basado en asignaciones
-        $query = DB::table('asignacion_horarios as ah')
-            ->join('infraestructura_aulas as ia', 'ah.codigo_aula', '=', 'ia.codigo_aula')
-            ->join('grupos as g', 'ah.codigo_grupo', '=', 'g.codigo_grupo')
-            ->select(
-                'ia.codigo_aula',
-                'ia.nombre_aula',
-                'ia.capacidad',
-                DB::raw('COUNT(DISTINCT ah.codigo_grupo) as grupos_asignados'),
-                DB::raw('COUNT(DISTINCT ah.codigo_doc) as docentes_asignados'),
-                DB::raw('SUM(g.cantidad_estudiantes) as estudiantes_total'),
-                'ah.periodo_academico'
-            );
-
-        if ($periodo) {
-            $query->where('ah.periodo_academico', $periodo);
-        }
-
-        if (isset($filtros['codigo_aula'])) {
-            $query->where('ia.codigo_aula', $filtros['codigo_aula']);
-        }
-
-        return $query->groupBy('ia.codigo_aula', 'ia.nombre_aula', 'ia.capacidad', 'ah.periodo_academico')
-            ->orderBy('ia.codigo_aula')
-            ->get()
-            ->map(function ($aula) {
-                $ocupacion = ($aula->estudiantes_total / $aula->capacidad) * 100;
                 return [
-                    'codigo_aula' => $aula->codigo_aula,
-                    'nombre_aula' => $aula->nombre_aula,
-                    'capacidad' => $aula->capacidad,
-                    'estudiantes_total' => $aula->estudiantes_total ?? 0,
-                    'grupos_asignados' => $aula->grupos_asignados,
-                    'docentes_asignados' => $aula->docentes_asignados,
-                    'porcentaje_ocupacion' => round($ocupacion, 2),
-                    'periodo_academico' => $aula->periodo_academico,
+                    'ID' => $asignacion->id_asignacion,
+                    'Docente' => $nombreDocente,
+                    'Materia' => $asignacion->grupo->materia->nombre_mat ?? 'Sin materia',
+                    'Grupo' => $asignacion->grupo->codigo_grupo ?? 'Sin grupo',
+                    'Aula' => $asignacion->aula->nro_aula ?? 'Sin aula',
+                    'Horario' => $horario ?: 'No definido',
+                    'Periodo Académico' => $asignacion->periodo_academico ?? 'No definido'
                 ];
-            })
-            ->toArray();
+            })->toArray();
+
+        } catch (\Exception $e) {
+            \Log::error('Error en obtenerHorariosSemanales: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
-     * Compartir reporte (generar enlace de descarga)
+     * Obtener Asistencia por Docente y Grupo
+     */
+    private function obtenerAsistenciaDocente($periodo = null, $docenteId = null, $grupoId = null)
+    {
+        try {
+            $query = DB::table('carga_horaria.sesion_asistencia as sa')
+                ->join('carga_horaria.asignacion_horario as ah', 'sa.id_asignacion', '=', 'ah.id_asignacion')
+                ->join('carga_horaria.docente as d', 'ah.codigo_doc', '=', 'd.codigo_doc')
+                ->join('carga_horaria.usuario as u', 'd.id_usuario', '=', 'u.id_usuario')
+                ->join('carga_horaria.persona as p', 'u.ci_persona', '=', 'p.ci')
+                ->join('carga_horaria.grupo as g', 'ah.codigo_grupo', '=', 'g.codigo_grupo')
+                ->join('carga_horaria.materia as m', 'g.codigo_mat', '=', 'm.codigo_mat')
+                ->select(
+                    DB::raw("CONCAT(p.nombre, ' ', COALESCE(p.apellido_paterno, ''), ' ', COALESCE(p.apellido_materno, '')) as docente"),
+                    'm.nombre_mat as materia',
+                    'g.codigo_grupo as grupo',
+                    DB::raw("TO_CHAR(sa.fecha_sesion, 'DD/MM/YYYY') as fecha"),
+                    DB::raw("TO_CHAR(sa.hora_inicio, 'HH24:MI') as hora_inicio"),
+                    DB::raw("TO_CHAR(sa.hora_fin, 'HH24:MI') as hora_fin"),
+                    'sa.estado',
+                    DB::raw("COALESCE((SELECT COUNT(*) FROM carga_horaria.asistencia WHERE id_sesion = sa.id_sesion AND estado = 'presente'), 0) as asistentes"),
+                    DB::raw("COALESCE(g.capacidad_de_grupo, 0) as total_estudiantes")
+                );
+
+            if ($periodo) {
+                $query->where('ah.periodo_academico', $periodo);
+            }
+
+            if ($docenteId) {
+                $query->where('d.codigo_doc', $docenteId);
+            }
+
+            if ($grupoId) {
+                $query->where('g.codigo_grupo', $grupoId);
+            }
+
+            $query->whereNotNull('sa.fecha_sesion')
+                  ->orderBy('sa.fecha_sesion', 'desc');
+
+            $resultados = $query->get();
+
+            // Si no hay resultados, retornar array vacío en lugar de error
+            if ($resultados->isEmpty()) {
+                return [];
+            }
+
+            return $resultados->map(function ($item) {
+                $porcentaje = 0;
+                if ($item->total_estudiantes > 0) {
+                    $porcentaje = round(($item->asistentes / $item->total_estudiantes) * 100, 2);
+                }
+
+                return [
+                    'docente' => trim($item->docente),
+                    'materia' => $item->materia,
+                    'grupo' => $item->grupo,
+                    'fecha' => $item->fecha,
+                    'hora_inicio' => $item->hora_inicio ?? 'No definido',
+                    'hora_fin' => $item->hora_fin ?? 'No definido',
+                    'estado' => $item->estado ?? 'desconocido',
+                    'asistentes' => $item->asistentes,
+                    'total_estudiantes' => $item->total_estudiantes,
+                    'porcentaje_asistencia' => $porcentaje . '%'
+                ];
+            })->toArray();
+
+        } catch (\Exception $e) {
+            // Log del error para depuración
+            \Log::error('Error en obtenerAsistenciaDocente: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Retornar array vacío en caso de error
+            return [];
+        }
+    }
+
+    /**
+     * Obtener Aulas Disponibles
+     */
+    private function obtenerAulasDisponibles()
+    {
+        try {
+            $aulas = Aula::with('infraestructura')->get();
+
+            if ($aulas->isEmpty()) {
+                return [];
+            }
+
+            return $aulas->map(function ($aula) {
+                // Contar asignaciones activas
+                $asignacionesActivas = AsignacionHorario::where('nro_aula', $aula->nro_aula)
+                    ->where('estado', 'activo')
+                    ->count();
+
+                $disponibilidad = $asignacionesActivas == 0 ? 'Disponible' : 'Ocupada';
+
+                return [
+                    'aula' => $aula->nro_aula,
+                    'infraestructura' => $aula->infraestructura->nombre_infra ?? 'Sin edificio',
+                    'capacidad' => $aula->capacidad ?? 0,
+                    'tipo' => $aula->tipo_aula ?? 'Normal',
+                    'asignaciones_activas' => $asignacionesActivas,
+                    'disponibilidad' => $disponibilidad
+                ];
+            })->toArray();
+
+        } catch (\Exception $e) {
+            \Log::error('Error en obtenerAulasDisponibles: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Generar PDF
+     */
+    private function generarPDF($tipoReporte, $datos)
+    {
+        $titulo = match($tipoReporte) {
+            'horarios_semanales' => 'Horarios Semanales',
+            'asistencia_docente' => 'Asistencia por Docente y Grupo',
+            'aulas_disponibles' => 'Aulas Disponibles',
+            default => 'Reporte'
+        };
+
+        $pdf = PDF::loadView('reportes.pdf', [
+            'titulo' => $titulo,
+            'datos' => $datos,
+            'fecha' => now()->format('d/m/Y H:i'),
+            'tipo' => $tipoReporte
+        ]);
+
+        $filename = str_replace(' ', '_', strtolower($titulo)) . '_' . now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Generar Excel (CSV)
+     */
+    private function generarExcel($tipoReporte, $datos)
+    {
+        if (empty($datos)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay datos para exportar'
+            ], 400);
+        }
+
+        $titulo = match($tipoReporte) {
+            'horarios_semanales' => 'Horarios_Semanales',
+            'asistencia_docente' => 'Asistencia_Docente',
+            'aulas_disponibles' => 'Aulas_Disponibles',
+            default => 'Reporte'
+        };
+
+        $filename = $titulo . '_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($datos) {
+            $file = fopen('php://output', 'w');
+            
+            // Encabezados
+            fputcsv($file, array_keys($datos[0]));
+            
+            // Datos
+            foreach ($datos as $row) {
+                fputcsv($file, $row);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Compartir reporte
      */
     public function compartir(Request $request)
     {
         try {
-            $usuario = auth('sanctum')->user();
-            
-            // Validar rol
-            $rol = $usuario->rol->nombre ?? null;
-            if (!in_array($rol, ['Administrador', 'Coordinador Académico'])) {
-                return response()->json(['message' => 'No tienes permiso para compartir reportes'], 403);
-            }
-
             $validated = $request->validate([
                 'tipo_reporte' => 'required|string',
                 'destinatarios' => 'required|array',
                 'mensaje' => 'nullable|string',
-                'formato' => 'required|in:pdf,excel,csv'
+                'formato' => 'required|in:pdf,excel'
             ]);
 
-            // Registrar compartición en bitácora
-            Bitacora::create([
-                'codigo_usuario' => $usuario->id,
-                'accion' => "Compartir reporte: {$validated['tipo_reporte']}",
-                'descripcion' => "Reporte compartido con " . count($validated['destinatarios']) . " destinatarios",
-                'tipo_evento' => 'COMPARTIR_REPORTE',
-                'fecha_hora' => now(),
-                'tabla_afectada' => 'Reportes',
-                'detalles' => json_encode([
-                    'tipo_reporte' => $validated['tipo_reporte'],
-                    'destinatarios' => $validated['destinatarios'],
-                    'formato' => $validated['formato']
-                ])
-            ]);
+            // Registrar en bitácora
+            Bitacora::registrar(
+                'Reportes',
+                "Compartió reporte: {$validated['tipo_reporte']}",
+                auth()->id(),
+                $validated
+            );
 
-            // Generar token único para descarga
-            $token = bin2hex(random_bytes(32));
-            
             return response()->json([
                 'success' => true,
-                'mensaje' => 'Reporte compartido exitosamente',
-                'token_descarga' => $token,
-                'url_descarga' => route('reportes.descargar', ['token' => $token]),
-                'destinatarios' => count($validated['destinatarios']),
-                'formato' => $validated['formato'],
-                'generado_en' => now(),
-                'expira_en' => now()->addDays(7)
+                'message' => 'Reporte compartido exitosamente',
+                'destinatarios' => count($validated['destinatarios'])
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['message' => 'Validación fallida', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error compartiendo reporte', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al compartir reporte: ' . $e->getMessage()
+            ], 500);
         }
-    }
-
-    /**
-     * Exportar a CSV
-     */
-    private function exportarCSV($tipoReporte, $datos)
-    {
-        // Crear contenido CSV
-        $filename = "reporte_{$tipoReporte}_" . now()->format('Ymd_His') . ".csv";
-        $path = "reports/" . $filename;
-        
-        $csv = $this->generarCSV($datos);
-        Storage::disk('public')->put($path, $csv);
-
-        return response()->json([
-            'success' => true,
-            'tipo_reporte' => $tipoReporte,
-            'formato' => 'csv',
-            'registros' => count($datos),
-            'descarga_url' => asset('storage/' . $path),
-            'filename' => $filename,
-            'generado_en' => now()
-        ]);
-    }
-
-    /**
-     * Exportar a PDF (simulado - requiere librería)
-     */
-    private function exportarPDF($tipoReporte, $datos)
-    {
-        // Esta es una implementación básica
-        // En producción, usar biblioteca como TCPDF o mPDF
-        $filename = "reporte_{$tipoReporte}_" . now()->format('Ymd_His') . ".pdf";
-        
-        return response()->json([
-            'success' => true,
-            'tipo_reporte' => $tipoReporte,
-            'formato' => 'pdf',
-            'registros' => count($datos),
-            'descarga_url' => route('reportes.descargar_pdf', ['tipo' => $tipoReporte]),
-            'filename' => $filename,
-            'generado_en' => now(),
-            'nota' => 'PDF generation requires TCPDF or mPDF library installation'
-        ]);
-    }
-
-    /**
-     * Exportar a Excel (simulado - requiere librería)
-     */
-    private function exportarExcel($tipoReporte, $datos)
-    {
-        // Esta es una implementación básica
-        // En producción, usar biblioteca como PhpSpreadsheet
-        $filename = "reporte_{$tipoReporte}_" . now()->format('Ymd_His') . ".xlsx";
-        
-        return response()->json([
-            'success' => true,
-            'tipo_reporte' => $tipoReporte,
-            'formato' => 'excel',
-            'registros' => count($datos),
-            'descarga_url' => route('reportes.descargar_excel', ['tipo' => $tipoReporte]),
-            'filename' => $filename,
-            'generado_en' => now(),
-            'nota' => 'Excel generation requires PhpSpreadsheet library installation'
-        ]);
-    }
-
-    /**
-     * Generar contenido CSV desde array de datos
-     */
-    private function generarCSV($datos)
-    {
-        if (empty($datos)) {
-            return '';
-        }
-
-        $output = '';
-        $headers = array_keys($datos[0]);
-        
-        // Agregar encabezados
-        $output .= implode(',', array_map(function($h) { 
-            return '"' . str_replace('"', '""', $h) . '"'; 
-        }, $headers)) . "\n";
-        
-        // Agregar datos
-        foreach ($datos as $fila) {
-            $output .= implode(',', array_map(function($valor) {
-                if (is_null($valor)) return '';
-                if (is_bool($valor)) return $valor ? '1' : '0';
-                return '"' . str_replace('"', '""', (string)$valor) . '"';
-            }, $fila)) . "\n";
-        }
-
-        return $output;
     }
 }

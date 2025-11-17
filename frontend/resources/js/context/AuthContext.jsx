@@ -20,18 +20,19 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, []);
 
-    const checkAuth = async () => {
+    const checkAuth = () => {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
         
         if (token && storedUser) {
             try {
-                const response = await api.get('/auth/me');
-                setUser(response.data.usuario);
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
                 setIsAuthenticated(true);
             } catch (error) {
-                console.error('Error al verificar autenticación:', error);
-                logout();
+                console.error('Error al parsear usuario:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
             }
         }
         setLoading(false);
@@ -39,21 +40,29 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (ci_persona, contrasena) => {
         try {
+            console.log('🔐 Intentando login...');
             const response = await api.post('/auth/login', {
                 login: ci_persona,
                 contrasena,
             });
             
+            console.log('✅ Respuesta del servidor:', response.data);
+            
             const { token, usuario } = response.data;
             
+            console.log('💾 Guardando en localStorage...');
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(usuario));
+            
+            console.log('🔄 Actualizando estado...');
             setUser(usuario);
             setIsAuthenticated(true);
             
+            console.log('✅ Estado actualizado:', { usuario, isAuth: true });
+            
             return { success: true };
         } catch (error) {
-            console.error('Error en login:', error);
+            console.error('❌ Error en login:', error);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Error al iniciar sesión',

@@ -32,6 +32,14 @@ export default defineConfig({
     },
     
     server: {
-        middlewareMode: true,
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: false,
+        cors: true,
+        hmr: {
+            host: 'localhost',
+            port: 5173,
+            protocol: 'ws'
+        }
     }
 });

@@ -97,7 +97,9 @@ const Bitacora = () => {
                                 <tr key={bitacora.id_bit} className="bitacora-row">
                                     <td className="id-cell">{bitacora.id_bit}</td>
                                     <td className="usuario-cell">
-                                        {bitacora.usuario?.nombre_usuario || 'Sistema'}
+                                        {bitacora.usuario?.persona?.nombre_completo || 
+                                         bitacora.usuario?.ci_persona || 
+                                         'Sistema'}
                                     </td>
                                     <td className="accion-cell">
                                         {bitacora.accion}

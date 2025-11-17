@@ -21,11 +21,26 @@ function Roles() {
         try {
             setLoading(true);
             const response = await api.get('/roles');
-            setRoles(response.data);
+            console.log('📋 Roles response en componente:', response.data);
+            
+            // Asegurarse de que roles sea un array
+            let rolesData = response.data;
+            if (!Array.isArray(rolesData)) {
+                console.warn('⚠️ Roles no es un array, intentando extraer de .data:', rolesData);
+                rolesData = rolesData.data || [];
+            }
+            if (!Array.isArray(rolesData)) {
+                console.error('❌ Roles sigue sin ser un array:', rolesData);
+                rolesData = [];
+            }
+            
+            setRoles(rolesData);
+            console.log('✅ Roles establecidos:', rolesData.length);
             setError(null);
         } catch (err) {
             setError('Error al cargar los roles');
             console.error('Error:', err);
+            setRoles([]);
         } finally {
             setLoading(false);
         }
@@ -160,7 +175,7 @@ function Roles() {
                         </tr>
                     </thead>
                     <tbody>
-                        {roles.length > 0 ? (
+                        {Array.isArray(roles) && roles.length > 0 ? (
                             roles.map((rol) => (
                                 <tr key={rol.id_rol}>
                                     <td>{rol.id_rol}</td>

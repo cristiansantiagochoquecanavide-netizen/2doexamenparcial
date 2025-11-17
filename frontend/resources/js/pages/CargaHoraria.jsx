@@ -156,12 +156,7 @@ const CargaHoraria = () => {
 
     return (
         <div className="carga-horaria-container">
-            <div className="header">
-                <h2>Asignación de Carga Horaria</h2>
-                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-                    <i className="fas fa-plus"></i> Nueva Asignación
-                </button>
-            </div>
+            <h2>CU11 - Asignación de Carga Horaria</h2>
 
             {error && <div className="alert alert-danger">{error}</div>}
 
@@ -185,6 +180,9 @@ const CargaHoraria = () => {
                         </option>
                     ))}
                 </select>
+                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                    <i className="fas fa-plus"></i> Nueva Asignación
+                </button>
             </div>
 
             <div className="table-responsive">
@@ -197,6 +195,7 @@ const CargaHoraria = () => {
                             <th>Grupo</th>
                             <th>Aula</th>
                             <th>Horario</th>
+                            <th>Periodo Académico</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -210,6 +209,7 @@ const CargaHoraria = () => {
                                     <td>{carga.grupo?.codigo_grupo || 'N/A'}</td>
                                     <td>{carga.nro_aula}</td>
                                     <td>{formatearHorario(carga.horario)}</td>
+                                    <td>{carga.periodo_academico || 'No definido'}</td>
                                     <td>
                                         <button 
                                             className="btn btn-sm btn-warning" 
@@ -228,7 +228,7 @@ const CargaHoraria = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="7" className="text-center">No hay asignaciones de carga horaria</td>
+                                <td colSpan="8" className="text-center">No hay asignaciones de carga horaria</td>
                             </tr>
                         )}
                     </tbody>

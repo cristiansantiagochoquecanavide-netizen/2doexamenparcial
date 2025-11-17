@@ -122,6 +122,7 @@ class UsuarioController extends Controller
             'telefono' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
             'direccion' => 'nullable|string|max:150',
+            'contrasena' => 'nullable|string|min:8',
             'id_rol' => 'nullable|exists:rol,id_rol',
             'estado' => 'sometimes|boolean',
         ]);
@@ -155,6 +156,9 @@ class UsuarioController extends Controller
             }
 
             // Actualizar usuario
+            if ($request->has('contrasena') && !empty($request->contrasena)) {
+                $usuario->contrasena = Hash::make($request->contrasena);
+            }
             if ($request->has('id_rol')) {
                 $usuario->id_rol = $request->id_rol;
             }
@@ -175,7 +179,15 @@ class UsuarioController extends Controller
 
             // Si el rol cambió a algo distinto de Docente y existe docente, eliminarlo
             if ($request->has('id_rol') && $request->id_rol != 5 && $usuario->docente) {
-                $usuario->docente->delete();
+                $docente = $usuario->docente;
+                
+                // Eliminar primero todas las asignaciones de horario
+                if ($docente->asignaciones()->exists()) {
+                    $docente->asignaciones()->delete();
+                }
+                
+                // Ahora sí eliminar el registro de docente
+                $docente->delete();
             }
 
             // Registrar en bitácora
@@ -207,9 +219,17 @@ class UsuarioController extends Controller
 
         DB::beginTransaction();
         try {
-            // Si el usuario es un docente, eliminar el registro de docente primero
+            // Si el usuario es un docente, eliminar todas las relaciones primero
             if ($usuario->docente) {
-                $usuario->docente->delete();
+                $docente = $usuario->docente;
+                
+                // 1. Eliminar todas las asignaciones de horario del docente
+                if ($docente->asignaciones()->exists()) {
+                    $docente->asignaciones()->delete();
+                }
+                
+                // 2. Ahora sí eliminar el registro de docente
+                $docente->delete();
             }
             
             // Eliminar el usuario - La cascada de la BD eliminará automáticamente la persona

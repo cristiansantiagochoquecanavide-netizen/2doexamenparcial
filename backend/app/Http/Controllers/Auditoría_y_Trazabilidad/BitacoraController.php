@@ -30,7 +30,16 @@ class BitacoraController extends Controller
             ->orderBy('fecha_accion', 'desc')
             ->paginate($request->per_page ?? 20);
 
-        return response()->json($bitacoras);
+        return response()->json([
+            'success' => true,
+            'data' => $bitacoras->items(),
+            'pagination' => [
+                'current_page' => $bitacoras->currentPage(),
+                'last_page' => $bitacoras->lastPage(),
+                'per_page' => $bitacoras->perPage(),
+                'total' => $bitacoras->total(),
+            ]
+        ]);
     }
 
     /**

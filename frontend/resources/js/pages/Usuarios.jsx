@@ -41,29 +41,57 @@ function Usuarios() {
     }, [currentPage, filterRol, filterEstado]);
 
     const fetchUsuarios = async () => {
+        console.log('🔄 fetchUsuarios llamado');
         try {
             setLoading(true);
             const params = {
                 page: currentPage,
                 ...(filterRol && { id_rol: filterRol })
             };
+            console.log('📤 Parámetros de petición:', params);
+            console.log('📡 URL completa:', import.meta.env.VITE_API_URL + '/usuarios');
+            
             const response = await api.get('/usuarios', { params });
-            setUsuarios(response.data.data);
-            setTotalPages(response.data.last_page);
+            
+            console.log('✅ Response completa:', response);
+            console.log('✅ Response.data:', response.data);
+            console.log('✅ Response.data.data:', response.data.data);
+            console.log('✅ Cantidad de usuarios recibidos:', response.data.data?.length);
+            
+            setUsuarios(response.data.data || []);
+            setTotalPages(response.data.last_page || 1);
+            
+            console.log('✅ Estado actualizado - usuarios:', response.data.data?.length);
         } catch (error) {
-            console.error('Error al cargar usuarios:', error);
-            alert('Error al cargar usuarios');
+            console.error('❌ Error al cargar usuarios:', error);
+            console.error('❌ Error details:', error.response);
+            console.error('❌ Error message:', error.message);
+            alert('ERROR: ' + (error.response?.data?.message || error.message));
+            setUsuarios([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
+            console.log('✅ Loading = false');
         }
     };
 
     const fetchRoles = async () => {
         try {
             const response = await api.get('/roles');
-            setRoles(response.data.data || response.data);
+            console.log('📋 Roles response:', response.data);
+            
+            // Asegurarse de que roles sea un array
+            let rolesData = response.data.data || response.data;
+            if (!Array.isArray(rolesData)) {
+                console.warn('⚠️ Roles no es un array:', rolesData);
+                rolesData = [];
+            }
+            
+            setRoles(rolesData);
+            console.log('✅ Roles cargados:', rolesData.length);
         } catch (error) {
             console.error('Error al cargar roles:', error);
+            setRoles([]);
         }
     };
 
@@ -81,12 +109,17 @@ function Usuarios() {
         if (!confirm('¿Está seguro de eliminar este usuario?')) return;
 
         try {
-            await api.delete(`/usuarios/${id}`);
+            console.log('🗑️ Intentando eliminar usuario:', id);
+            const response = await api.delete(`/usuarios/${id}`);
+            console.log('✅ Respuesta de eliminación:', response);
             alert('Usuario eliminado exitosamente');
             fetchUsuarios();
         } catch (error) {
-            console.error('Error al eliminar usuario:', error);
-            alert(error.response?.data?.message || 'Error al eliminar usuario');
+            console.error('❌ Error al eliminar usuario:', error);
+            console.error('❌ Error response:', error.response);
+            console.error('❌ Error response data:', error.response?.data);
+            const errorMsg = error.response?.data?.message || error.message || 'Error al eliminar usuario';
+            alert('Error al eliminar usuario: ' + errorMsg);
         }
     };
 
@@ -110,17 +143,26 @@ function Usuarios() {
 
     const handleSave = async (data) => {
         try {
+            console.log('💾 Guardando usuario:', { editingUsuario, data });
+            
             if (editingUsuario) {
-                await api.put(`/usuarios/${editingUsuario.id_usuario}`, data);
+                console.log('📝 Actualizando usuario ID:', editingUsuario.id_usuario);
+                const response = await api.put(`/usuarios/${editingUsuario.id_usuario}`, data);
+                console.log('✅ Respuesta de actualización:', response);
                 alert('Usuario actualizado exitosamente');
             } else {
-                await api.post('/usuarios', data);
+                console.log('➕ Creando nuevo usuario');
+                const response = await api.post('/usuarios', data);
+                console.log('✅ Respuesta de creación:', response);
                 alert('Usuario creado exitosamente');
             }
             setShowModal(false);
             fetchUsuarios();
         } catch (error) {
-            console.error('Error al guardar usuario:', error);
+            console.error('❌ Error al guardar usuario:', error);
+            console.error('❌ Error response:', error.response);
+            console.error('❌ Error data:', error.response?.data);
+            alert('Error al guardar usuario: ' + (error.response?.data?.message || error.message));
             throw error;
         }
     };
@@ -150,6 +192,10 @@ function Usuarios() {
         
         return matchesSearch && matchesRol && matchesEstado;
     });
+
+    console.log('Total usuarios cargados:', usuarios.length);
+    console.log('Usuarios filtrados:', filteredUsuarios.length);
+    console.log('Filtros activos:', { searchTerm, filterRol, filterEstado });
 
     return (
         <div className="space-y-6">
@@ -203,7 +249,7 @@ function Usuarios() {
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         >
                             <option value="">Todos los roles</option>
-                            {roles.map(rol => (
+                            {Array.isArray(roles) && roles.map(rol => (
                                 <option key={rol.id_rol} value={rol.id_rol}>{rol.nombre}</option>
                             ))}
                         </select>

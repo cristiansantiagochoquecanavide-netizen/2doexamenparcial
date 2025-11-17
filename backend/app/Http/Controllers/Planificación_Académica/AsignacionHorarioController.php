@@ -29,12 +29,30 @@ class AsignacionHorarioController extends Controller
      */
     public function index(Request $request)
     {
+        $usuario = $request->user()->load('rol');
+        
+        // Debug: Log para verificar el usuario y rol
+        \Log::info('Usuario autenticado:', [
+            'id_usuario' => $usuario->id_usuario,
+            'rol' => $usuario->rol ? $usuario->rol->nombre_rol : 'sin rol',
+            'ci_persona' => $usuario->ci_persona
+        ]);
+        
         $asignaciones = AsignacionHorario::with([
             'docente.usuario.persona',
             'grupo.materia',
             'aula.infraestructura',
             'horario'
         ])
+        // Filtrar por docente si el usuario autenticado es Docente
+        ->when($usuario && $usuario->rol && $usuario->rol->nombre_rol === 'Docente', function ($query) use ($usuario) {
+            // Buscar el docente asociado al usuario
+            $docente = Docente::where('id_usuario', $usuario->id_usuario)->first();
+            \Log::info('Docente encontrado:', ['docente' => $docente ? $docente->codigo_doc : 'NO ENCONTRADO']);
+            if ($docente) {
+                $query->where('codigo_doc', $docente->codigo_doc);
+            }
+        })
         ->when($request->periodo_academico, function ($query, $periodo) {
             $query->porPeriodo($periodo);
         })

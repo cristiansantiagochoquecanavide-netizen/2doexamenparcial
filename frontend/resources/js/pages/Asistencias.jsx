@@ -3,8 +3,10 @@ import api from '../utils/api';
 import '../../css/CRUD.css';
 import GenerarQR from './GenerarQR';
 import GestionInasistencias from './GestionInasistencias';
+import { useAuth } from '../context/AuthContext';
 
 function Asistencias() {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('generar-qr'); // generar-qr | registrar
     const [asistencias, setAsistencias] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,9 +22,14 @@ function Asistencias() {
         observaciones: ''
     });
 
+    // Verificar si el usuario es Docente
+    const isDocente = user?.rol?.nombre_rol === 'Docente';
+
     useEffect(() => {
-        fetchAsistencias();
-    }, []);
+        if (!isDocente) {
+            fetchAsistencias();
+        }
+    }, [isDocente]);
 
     const fetchAsistencias = async () => {
         try {
@@ -109,8 +116,17 @@ function Asistencias() {
         setShowForm(false);
     };
 
-    if (loading) {
+    if (loading && !isDocente) {
         return <div className="loading">Cargando asistencias...</div>;
+    }
+
+    // Si es Docente, mostrar solo el componente GenerarQR sin pestañas ni header
+    if (isDocente) {
+        return (
+            <div className="crud-container">
+                <GenerarQR />
+            </div>
+        );
     }
 
     return (

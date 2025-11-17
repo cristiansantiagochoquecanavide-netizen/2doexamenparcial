@@ -14,7 +14,7 @@ const menuModules = [
         items: [
             { name: 'Inicio', path: '/' }
         ],
-        visibleForRoles: ['all']
+        visibleForRoles: ['Administrador', 'Coordinador Académico']
     },
     {
         id: 1,
@@ -72,10 +72,10 @@ const menuModules = [
             </svg>
         ),
         items: [
-            { name: 'CU14 - Registrar Asistencia', path: '/asistencias', cu: 'CU14' },
-            { name: 'CU15 - Gestionar Inasistencias y Justificaciones', path: '/gestionar-inasistencias', cu: 'CU15' }
+            { name: 'CU14 - Registrar Asistencia', path: '/asistencias', cu: 'CU14', visibleForRoles: ['Administrador', 'Coordinador Académico', 'Docente'] },
+            { name: 'CU15 - Gestionar Inasistencias y Justificaciones', path: '/gestionar-inasistencias', cu: 'CU15', visibleForRoles: ['Administrador', 'Coordinador Académico'] }
         ],
-        visibleForRoles: ['Administrador', 'Coordinador Académico']
+        visibleForRoles: ['Administrador', 'Coordinador Académico', 'Docente']
     },
     {
         id: 6,
@@ -134,15 +134,23 @@ function Sidebar({ isOpen, onClose }) {
         });
     }
 
-    // Filtrar módulos visibles según el rol
+    // Filtrar módulos según el rol del usuario
     const canViewModule = (module) => {
-        if (module.visibleForRoles.includes('all')) return true;
+        // Si el módulo no tiene restricciones de rol o permite 'all', mostrarlo
+        if (!module.visibleForRoles || module.visibleForRoles.includes('all')) {
+            return true;
+        }
+        // Verificar si el rol del usuario está en la lista de roles permitidos
         return module.visibleForRoles.includes(userRole);
     };
 
-    // Filtrar items del módulo según el rol
+    // Filtrar items según el rol del usuario
     const canViewItem = (item) => {
-        if (!item.visibleForRoles) return true; // Si no especifica, mostrar a todos
+        // Si el item no tiene restricciones de rol, mostrarlo
+        if (!item.visibleForRoles) {
+            return true;
+        }
+        // Verificar si el rol del usuario está en la lista de roles permitidos
         return item.visibleForRoles.includes(userRole);
     };
 

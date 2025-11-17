@@ -5,8 +5,10 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 
 function Layout() {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading, user } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    console.log('🏗️ Layout render:', { isAuthenticated, loading, hasUser: !!user });
 
     if (loading) {
         return (
@@ -20,9 +22,12 @@ function Layout() {
     }
 
     if (!isAuthenticated) {
+        console.log('❌ No autenticado, redirigiendo a login...');
         return <Navigate to="/login" replace />;
     }
 
+    console.log('✅ Autenticado, mostrando layout');
+    
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
             {/* Header */}

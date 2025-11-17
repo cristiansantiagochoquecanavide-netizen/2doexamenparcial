@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Usuarios</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background: #ff6b35;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #e55a2b;
+        }
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ff6b35;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #ff6b35;
+            color: white;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test API de Usuarios</h1>
+        <p>URL del API: <strong>http://127.0.0.1:8000/api/usuarios</strong></p>
+        
+        <button onclick="testAPI()">🚀 Probar GET /usuarios</button>
+        
+        <div id="result"></div>
+        <div id="table"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            const tableDiv = document.getElementById('table');
+            
+            resultDiv.innerHTML = '⏳ Cargando...';
+            tableDiv.innerHTML = '';
+            
+            try {
+                console.log('🔵 Haciendo petición a:', 'http://127.0.0.1:8000/api/usuarios');
+                
+                const response = await fetch('http://127.0.0.1:8000/api/usuarios', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', [...response.headers.entries()]);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Data recibida:', data);
+                
+                // Mostrar resultado
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>✅ Petición exitosa!</strong><br>
+                        Status: ${response.status}<br>
+                        Total de usuarios: ${data.data?.length || 0}<br>
+                        Página actual: ${data.current_page}<br>
+                        Total páginas: ${data.last_page}
+                    </div>
+                `;
+                
+                // Mostrar tabla
+                if (data.data && data.data.length > 0) {
+                    let tableHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>CI</th>
+                                    <th>Nombre</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.data.forEach(usuario => {
+                        tableHTML += `
+                            <tr>
+                                <td>${usuario.id_usuario}</td>
+                                <td>${usuario.ci_persona}</td>
+                                <td>${usuario.persona?.nombre || 'Sin nombre'}</td>
+                                <td>${usuario.rol?.nombre || 'Sin rol'}</td>
+                                <td>${usuario.estado ? '✅ Activo' : '❌ Inactivo'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                    `;
+                    
+                    tableDiv.innerHTML = tableHTML;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error en la petición:</strong><br>
+                        ${error.message}<br><br>
+                        <strong>Posibles causas:</strong><br>
+                        1. El servidor backend no está corriendo en http://127.0.0.1:8000<br>
+                        2. Problema de CORS<br>
+                        3. El endpoint /api/usuarios no existe<br><br>
+                        <strong>Revisa la consola del navegador (F12) para más detalles</strong>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-ejecutar al cargar la página
+        window.addEventListener('load', () => {
+            console.log('🌐 Página cargada, probando API...');
+            testAPI();
+        });
+    </script>
+</body>
+</html>

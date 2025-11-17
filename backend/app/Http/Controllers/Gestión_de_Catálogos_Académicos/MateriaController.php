@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Materia;
 use App\Models\Bitacora;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MateriaController extends Controller
 {
@@ -98,20 +99,38 @@ class MateriaController extends Controller
         $materia = Materia::findOrFail($codigo);
         $nombreMateria = $materia->nombre_mat;
 
-        // Verificar si tiene grupos
-        if ($materia->grupos()->count() > 0) {
+        DB::beginTransaction();
+        try {
+            // Si tiene grupos, eliminar primero sus asignaciones y luego los grupos
+            if ($materia->grupos()->exists()) {
+                foreach ($materia->grupos as $grupo) {
+                    // Eliminar asignaciones de horario del grupo
+                    if ($grupo->asignaciones()->exists()) {
+                        $grupo->asignaciones()->delete();
+                    }
+                    // Eliminar el grupo
+                    $grupo->delete();
+                }
+            }
+
+            // Ahora eliminar la materia
+            $materia->delete();
+
+            Bitacora::registrar('Gestión de Materias', "Materia eliminada: {$nombreMateria}");
+
+            DB::commit();
+
             return response()->json([
-                'message' => 'No se puede eliminar la materia porque tiene grupos asignados',
-            ], 422);
+                'message' => 'Materia eliminada exitosamente',
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al eliminar la materia',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $materia->delete();
-
-        Bitacora::registrar('Gestión de Materias', "Materia eliminada: {$nombreMateria}");
-
-        return response()->json([
-            'message' => 'Materia eliminada exitosamente',
-        ]);
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Infraestructura;
 use App\Models\Bitacora;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InfraestructuraController extends Controller
 {
@@ -119,19 +120,37 @@ class InfraestructuraController extends Controller
         $infraestructura = Infraestructura::findOrFail($id);
         $nombreInfraestructura = $infraestructura->nombre_infr;
 
-        // Verificar si tiene aulas
-        if ($infraestructura->aulas()->count() > 0) {
+        DB::beginTransaction();
+        try {
+            // Si tiene aulas, eliminar primero sus asignaciones y luego las aulas
+            if ($infraestructura->aulas()->exists()) {
+                foreach ($infraestructura->aulas as $aula) {
+                    // Eliminar asignaciones de horario del aula
+                    if ($aula->asignaciones()->exists()) {
+                        $aula->asignaciones()->delete();
+                    }
+                    // Eliminar el aula
+                    $aula->delete();
+                }
+            }
+
+            // Ahora eliminar la infraestructura
+            $infraestructura->delete();
+
+            Bitacora::registrar('Gestión de Infraestructura', "Infraestructura eliminada: {$nombreInfraestructura}");
+
+            DB::commit();
+
             return response()->json([
-                'message' => 'No se puede eliminar la infraestructura porque tiene aulas asociadas',
-            ], 422);
+                'message' => 'Infraestructura eliminada exitosamente',
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al eliminar la infraestructura',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $infraestructura->delete();
-
-        Bitacora::registrar('Gestión de Infraestructura', "Infraestructura eliminada: {$nombreInfraestructura}");
-
-        return response()->json([
-            'message' => 'Infraestructura eliminada exitosamente',
-        ]);
     }
 }

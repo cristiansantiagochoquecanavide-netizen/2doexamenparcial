@@ -217,15 +217,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('malla-horaria/validar', [MallaHorariaController::class, 'validarFranjas']);
     });
 
+    // Ver asignaciones (todos los roles autenticados pueden ver según su nivel de acceso)
+    Route::get('asignaciones', [AsignacionHorarioController::class, 'index']);
+    Route::get('asignaciones/docente/{codigo_doc}', [AsignacionHorarioController::class, 'horarioDocente']);
+    Route::get('asignaciones/grupo/{codigo_grupo}', [AsignacionHorarioController::class, 'horarioGrupo']);
 
     // CU11: Asignaciones de Horario - Asignar Carga Horaria (Solo Coordinador Académico)
     Route::middleware('permiso:asignar_carga_horaria')->group(function () {
-        Route::apiResource('asignaciones', AsignacionHorarioController::class);
+        Route::post('asignaciones', [AsignacionHorarioController::class, 'store']);
+        Route::get('asignaciones/{asignacion}', [AsignacionHorarioController::class, 'show']);
+        Route::put('asignaciones/{asignacion}', [AsignacionHorarioController::class, 'update']);
+        Route::delete('asignaciones/{asignacion}', [AsignacionHorarioController::class, 'destroy']);
     });
-
-    // Ver asignaciones (sin restricción)
-    Route::get('asignaciones/docente/{codigo_doc}', [AsignacionHorarioController::class, 'horarioDocente']);
-    Route::get('asignaciones/grupo/{codigo_grupo}', [AsignacionHorarioController::class, 'horarioGrupo']);
 
     // CU12: Gestionar Conflictos de Horario (Solo Coordinador Académico)
     Route::middleware('permiso:gestionar_conflictos_horario')->group(function () {

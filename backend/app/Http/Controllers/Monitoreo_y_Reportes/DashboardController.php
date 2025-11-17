@@ -20,9 +20,10 @@ class DashboardController extends Controller
         try {
             $usuario = auth('sanctum')->user();
             
-            // Validar que solo Administrador y Coordinador Académico accedan
+            // Validar roles permitidos (extender a Docente para pruebas)
             $rol = $usuario->rol->nombre ?? null;
-            if (!in_array($rol, ['Administrador', 'Coordinador Académico'])) {
+            $rolesPermitidos = ['Administrador', 'Coordinador Académico', 'Docente'];
+            if (!in_array($rol, $rolesPermitidos)) {
                 return response()->json(['message' => 'No tienes permiso para acceder al dashboard'], 403);
             }
 

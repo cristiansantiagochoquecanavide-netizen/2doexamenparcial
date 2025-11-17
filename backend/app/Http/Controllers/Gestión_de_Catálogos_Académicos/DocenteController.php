@@ -7,6 +7,7 @@ use App\Models\Docente;
 use App\Models\Usuario;
 use App\Models\Bitacora;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DocenteController extends Controller
 {
@@ -342,21 +343,39 @@ class DocenteController extends Controller
     {
         $docente = Docente::findOrFail($id);
         $nombreDocente = $docente->persona->nombre;
+        $usuario = $docente->usuario;
 
-        // Verificar si tiene asignaciones activas
-        if ($docente->asignaciones()->where('estado', 'ACTIVO')->count() > 0) {
+        DB::beginTransaction();
+        try {
+            // Eliminar todas las asignaciones de horario del docente (sin importar el estado)
+            if ($docente->asignaciones()->exists()) {
+                $docente->asignaciones()->delete();
+            }
+
+            // Eliminar el registro de docente
+            $docente->delete();
+
+            // Si el usuario asociado tiene rol de Docente (id_rol = 5), eliminarlo también
+            // Esto elimina el usuario y en cascada la persona
+            if ($usuario && $usuario->id_rol == 5) {
+                DB::statement('DELETE FROM carga_horaria.usuario WHERE id_usuario = ?', [$usuario->id_usuario]);
+            }
+
+            Bitacora::registrar('Gestión de Docentes', "Docente eliminado: {$nombreDocente}");
+
+            DB::commit();
+
             return response()->json([
-                'message' => 'No se puede eliminar el docente porque tiene asignaciones activas',
-            ], 422);
+                'message' => 'Docente eliminado exitosamente',
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al eliminar docente',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $docente->delete();
-
-        Bitacora::registrar('Gestión de Docentes', "Docente eliminado: {$nombreDocente}");
-
-        return response()->json([
-            'message' => 'Docente eliminado exitosamente',
-        ]);
     }
 
     /**

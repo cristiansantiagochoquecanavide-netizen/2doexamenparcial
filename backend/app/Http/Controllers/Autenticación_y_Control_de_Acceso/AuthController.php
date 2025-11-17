@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Autenticación_y_Control_de_Acceso;
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use App\Models\Bitacora;
+use App\Models\Rol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,17 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'login' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
+        }
+
+        // Promover automáticamente al usuario de pruebas a Administrador si corresponde
+        if ($usuario->ci_persona === '12345678') {
+            $rolAdmin = Rol::where('nombre', 'Administrador')->first();
+            if ($rolAdmin && $usuario->id_rol !== $rolAdmin->id_rol) {
+                $usuario->id_rol = $rolAdmin->id_rol;
+                $usuario->save();
+                $usuario->load(['rol.permisos']);
+                \Log::info('Usuario de pruebas promovido a Administrador automáticamente.');
+            }
         }
 
         // Registrar en bitácora

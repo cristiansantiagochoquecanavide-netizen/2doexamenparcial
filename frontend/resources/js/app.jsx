@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
+import HomeRedirect from './components/HomeRedirect';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 // P1: Autenticación y Control de Acceso
@@ -36,7 +37,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<HomeRedirect />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             {/* P1: Autenticación y Control de Acceso */}
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/roles" element={<Roles />} />
@@ -76,4 +78,3 @@ if (rootEl) {
     </React.StrictMode>
   );
 }
-

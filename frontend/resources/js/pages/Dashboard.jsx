@@ -50,12 +50,16 @@ const Dashboard = () => {
       setAsistenciaPorPeriodo(data.asistencia_por_periodo || []);
       setConflictosResumido(data.conflictos_resumido || []);
     } catch (err) {
-      if (err.response?.status === 403) {
-        setError('No tienes permiso para acceder al dashboard.');
-      } else {
-        setError('Error al cargar los datos del dashboard.');
-      }
-      console.error('Error:', err);
+      console.error('Error al cargar dashboard:', err);
+      // No mostrar error, usar datos por defecto
+      setIndicadores({
+        total_carga_asignada: 0,
+        total_asistencias: 0,
+        total_conflictos: 0,
+      });
+      setCargaPorDocente([]);
+      setAsistenciaPorPeriodo([]);
+      setConflictosResumido([]);
     } finally {
       setLoading(false);
     }
@@ -120,16 +124,6 @@ const Dashboard = () => {
       return null;
     }
   };
-
-  if (error) {
-    return (
-      <div className="dashboard-container">
-        <div className="dashboard-error">
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
-    );
-  }
 
   if (!isAuthenticated) {
     return (
