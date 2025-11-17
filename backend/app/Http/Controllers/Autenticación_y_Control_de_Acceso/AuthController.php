@@ -23,28 +23,20 @@ class AuthController extends Controller
         $loginValue = $request->input('login') ?? $request->input('email') ?? $request->input('ci_persona');
         $passwordValue = $request->input('contrasena') ?? $request->input('password');
         
-        // Debug: Log de qué está recibiendo
-        \Log::info('=== LOGIN ATTEMPT ===');
-        \Log::info('Full request:', $request->all());
-        \Log::info('Login value (from login, email or ci_persona):', [$loginValue]);
-        \Log::info('Password value:', [$passwordValue ? 'present' : 'missing']);
-        
         // Validar
         if (!$loginValue || !$passwordValue) {
-            \Log::error('Validation failed: Missing login or password');
             throw ValidationException::withMessages([
                 'login' => ['Credenciales requeridas.'],
             ]);
         }
 
-        // Cargar rol con permisos para que el frontend reciba inmediatamente los permisos
+        // Cargar todas las relaciones necesarias en una sola query optimizada
         $usuario = Usuario::with(['persona', 'rol.permisos'])
             ->where('ci_persona', $loginValue)
             ->where('estado', true)
             ->first();
 
         if (!$usuario || !Hash::check($passwordValue, $usuario->contrasena)) {
-            \Log::warning('Login failed - Invalid credentials for: ' . $loginValue);
             throw ValidationException::withMessages([
                 'login' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
@@ -57,7 +49,6 @@ class AuthController extends Controller
                 $usuario->id_rol = $rolAdmin->id_rol;
                 $usuario->save();
                 $usuario->load(['rol.permisos']);
-                \Log::info('Usuario de pruebas promovido a Administrador automáticamente.');
             }
         }
 
@@ -75,16 +66,12 @@ class AuthController extends Controller
             $filtros = [
                 'filtro1' => 'Descripción del filtro 1',
                 'filtro2' => 'Descripción del filtro 2',
-                // Agregar más filtros según sea necesario
             ];
         }
 
-        \Log::info('Login successful for user: ' . $usuario->ci_persona);
-
         return response()->json([
             'message' => 'Inicio de sesión exitoso',
-            // Asegurar que el frontend reciba las relaciones necesarias
-            'usuario' => $usuario->load(['persona', 'rol.permisos']),
+            'usuario' => $usuario,
             'token' => $token,
             'filtros' => $filtros,
         ]);
