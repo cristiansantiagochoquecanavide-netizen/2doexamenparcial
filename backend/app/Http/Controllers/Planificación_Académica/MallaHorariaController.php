@@ -91,8 +91,9 @@ class MallaHorariaController extends Controller
             $turnos = $request->turnos;
             $diasSemana = $request->dias_semana;
 
-            // Eliminar horarios existentes
-            Horario::truncate();
+            // Limpiar datos previos respetando dependencias (asignaciones -> horarios)
+            AsignacionHorario::query()->delete();
+            Horario::query()->delete();
 
             $horariosCreados = 0;
 
