@@ -35,6 +35,11 @@ class PermisoSeeder extends Seeder
                 'descripcion' => 'Puede eliminar carga horaria asignada',
                 'modulo' => 'P3',
             ],
+            [
+                'nombre' => 'configurar_malla_horaria',
+                'descripcion' => 'Puede configurar la malla horaria',
+                'modulo' => 'P3',
+            ],
             
             // P1 - Autenticación y Control de Acceso
             [
@@ -137,6 +142,7 @@ class PermisoSeeder extends Seeder
                     'gestionar_grupos',
                     'gestionar_aulas',
                     'ver_asistencias',
+                    'configurar_malla_horaria',
                 ])
                 ->pluck('id_permiso');
 
