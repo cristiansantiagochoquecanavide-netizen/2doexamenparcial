@@ -70,8 +70,9 @@ class UsuarioController extends Controller
                 'id_rol' => $request->id_rol,
             ]);
 
-            // Si el rol es Docente (id_rol = 5), crear registro en tabla docente
-            if ($request->id_rol == 5) {
+            // Si el rol es Docente, crear registro en tabla docente
+            $rol = Rol::find($request->id_rol);
+            if ($rol && $rol->nombre === 'Docente') {
                 Docente::create([
                     'id_usuario' => $usuario->id_usuario,
                     'titulo' => 'Docente',
@@ -167,18 +168,20 @@ class UsuarioController extends Controller
             }
             $usuario->save();
 
-            // Si el rol cambió a Docente (id_rol = 5) y no existe docente aún, crearlo
-            if ($request->has('id_rol') && $request->id_rol == 5 && !$usuario->docente) {
-                Docente::create([
-                    'id_usuario' => $usuario->id_usuario,
-                    'titulo' => 'Docente',
-                    'correo_institucional' => $usuario->persona->email,
-                    'carga_horaria_max' => 40,
-                ]);
-            }
+            // Si el rol cambió a Docente y no existe docente aún, crearlo
+            if ($request->has('id_rol')) {
+                $nuevoRol = Rol::find($request->id_rol);
+                if ($nuevoRol && $nuevoRol->nombre === 'Docente' && !$usuario->docente) {
+                    Docente::create([
+                        'id_usuario' => $usuario->id_usuario,
+                        'titulo' => 'Docente',
+                        'correo_institucional' => $usuario->persona->email,
+                        'carga_horaria_max' => 40,
+                    ]);
+                }
 
-            // Si el rol cambió a algo distinto de Docente y existe docente, eliminarlo
-            if ($request->has('id_rol') && $request->id_rol != 5 && $usuario->docente) {
+                // Si el rol cambió a algo distinto de Docente y existe docente, eliminarlo
+                if ($nuevoRol && $nuevoRol->nombre !== 'Docente' && $usuario->docente) {
                 $docente = $usuario->docente;
                 
                 // Eliminar primero todas las asignaciones de horario
@@ -186,8 +189,9 @@ class UsuarioController extends Controller
                     $docente->asignaciones()->delete();
                 }
                 
-                // Ahora sí eliminar el registro de docente
-                $docente->delete();
+                    // Ahora sí eliminar el registro de docente
+                    $docente->delete();
+                }
             }
 
             // Registrar en bitácora

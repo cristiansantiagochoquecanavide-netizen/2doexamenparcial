@@ -115,7 +115,6 @@ Route::get('periodos-academicos', [AsignacionHorarioController::class, 'periodos
 // RUTAS DE LECTURA (solo lectura para combos y formularios)
 // ==========================================
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/docentes', [DocenteController::class, 'index']);
     Route::get('/grupos', [GrupoController::class, 'index']);
     Route::get('/aulas', [AulaController::class, 'index']);
     Route::get('/horarios', [HorarioController::class, 'index']);
@@ -171,8 +170,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==========================================
     
     // CU4: Gestionar Docentes
+    // Ruta de lectura abierta a todos los autenticados
+    Route::get('/docentes', [DocenteController::class, 'index']);
+    // Rutas protegidas para gestión de docentes (crear, editar, eliminar)
     Route::middleware('permiso:gestionar_docentes')->group(function () {
-        Route::apiResource('docentes', DocenteController::class);
+        Route::post('/docentes', [DocenteController::class, 'store']);
+        Route::get('/docentes/{docente}', [DocenteController::class, 'show']);
+        Route::put('/docentes/{docente}', [DocenteController::class, 'update']);
+        Route::patch('/docentes/{docente}', [DocenteController::class, 'update']);
+        Route::delete('/docentes/{docente}', [DocenteController::class, 'destroy']);
     });
     
     // CU5: Gestionar Materias
