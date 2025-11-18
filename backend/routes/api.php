@@ -217,10 +217,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('carga-horaria/{codigo}', [CargaHorariaController::class, 'show']);
     
     // CU10: Configurar Malla Horaria (Solo Coordinador Académico)
-    Route::middleware('permiso:configurar_malla_horaria')->group(function () {
-    Route::apiResource('malla-horaria', MallaHorariaController::class);
-    Route::delete('malla-horaria-eliminar', [MallaHorariaController::class, 'eliminarMalla']);
-    Route::post('malla-horaria/validar', [MallaHorariaController::class, 'validarFranjas']);
+    Route::middleware(['auth:sanctum', 'permiso:configurar_malla_horaria'])->group(function () {
+        Route::apiResource('malla-horaria', MallaHorariaController::class);
+        Route::delete('malla-horaria-eliminar', [MallaHorariaController::class, 'eliminarMalla']);
+        Route::post('malla-horaria/validar', [MallaHorariaController::class, 'validarFranjas']);
     });
 
     // Ver asignaciones (todos los roles autenticados pueden ver según su nivel de acceso)

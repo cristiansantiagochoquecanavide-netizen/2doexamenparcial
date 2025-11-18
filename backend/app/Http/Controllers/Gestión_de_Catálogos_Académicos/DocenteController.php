@@ -69,7 +69,7 @@ class DocenteController extends Controller
                             'usuario_estado' => $d->usuario ? $d->usuario->estado : null,
                             'usuario_rol' => $d->usuario && $d->usuario->rol ? $d->usuario->rol->nombre : null,
                         ];
-                    })
+                    })->toArray(),
                 ]);
             }
 
@@ -79,52 +79,14 @@ class DocenteController extends Controller
                 $nombreCompleto = 'Desconocido';
                 if ($docente->usuario && $docente->usuario->persona) {
                     $persona = $docente->usuario->persona;
-                    $nombre = trim($persona->nombre ?? '');
-                    $apellidoPaterno = trim($persona->apellido_paterno ?? '');
-                    $apellidoMaterno = trim($persona->apellido_materno ?? '');
-                    
-                    // Construir: Nombre Apellido_Paterno Apellido_Materno
-                    $parts = array_filter([$nombre, $apellidoPaterno, $apellidoMaterno]);
-                    $nombreCompleto = !empty($parts) ? implode(' ', $parts) : 'Desconocido';
-                }
-
-                // Obtener materias asignadas (sin duplicados)
-                $materias = [];
-                try {
-                    if ($docente->asignaciones && count($docente->asignaciones) > 0) {
-                        $materiasCollection = collect($docente->asignaciones)
-                            ->pluck('grupo.materia.nombre_mat')
-                            ->filter()
-                            ->unique()
-                            ->values();
-                        $materias = $materiasCollection->toArray();
-                    }
-                } catch (\Exception $e) {
-                    // Si hay error al obtener materias, continuar sin ellas
-                    $materias = [];
+                    $nombreCompleto = trim("{$persona->nombre} {$persona->apellido_paterno} {$persona->apellido_materno}");
                 }
 
                 return [
-                    'codigo_doc' => $docente->codigo_doc,
-                    'titulo' => $docente->titulo,
-                    'correo_institucional' => $docente->correo_institucional,
-                    'carga_horaria_max' => $docente->carga_horaria_max,
-                    'id_usuario' => $docente->id_usuario,
+                    'id' => $docente->id,
                     'nombre_completo' => $nombreCompleto,
-                    'nombre_docente' => $nombreCompleto,
-                    'materias' => $materias,
-                    'usuario' => $docente->usuario ? [
-                        'id_usuario' => $docente->usuario->id_usuario,
-                        'estado' => $docente->usuario->estado,
-                        'ci_persona' => $docente->usuario->ci_persona,
-                        'id_rol' => $docente->usuario->id_rol,
-                        'persona' => $docente->usuario->persona ? [
-                            'ci' => $docente->usuario->persona->ci,
-                            'nombre_completo' => $docente->usuario->persona->nombre_completo,
-                            'apellido' => $docente->usuario->persona->apellido,
-                            'nombre' => $docente->usuario->persona->nombre,
-                        ] : null,
-                    ] : null,
+                    'titulo' => $docente->titulo,
+                    'estado' => $docente->estado,
                 ];
             });
 
@@ -190,27 +152,34 @@ class DocenteController extends Controller
                 'direccion' => $request->direccion,
             ]);
 
+            \Log::info('Persona creada correctamente', ['ci' => $persona->ci]);
+
             // 2. Obtener el rol "Docente"
             $rolDocente = \DB::table('rol')->where('nombre', 'Docente')->first();
             if (!$rolDocente) {
                 throw new \Exception('El rol Docente no existe en la base de datos');
             }
 
+            \Log::info('Rol Docente obtenido correctamente', ['id_rol' => $rolDocente->id_rol]);
+
             // 3. Crear usuario con rol de Docente
             $usuario = Usuario::create([
-                'ci_persona' => $persona->ci,
+                'id_persona' => $persona->id_persona,
+                'estado' => 'A',
                 'id_rol' => $rolDocente->id_rol,
-                'contrasena' => \Hash::make('password123'), // Contraseña temporal
-                'estado' => $request->estado === 'A' ? true : false, // Convertir a booleano
             ]);
+
+            \Log::info('Usuario creado correctamente', ['id_usuario' => $usuario->id_usuario]);
 
             // 4. Crear docente con los campos que realmente existen en la tabla
             $docente = Docente::create([
                 'titulo' => $request->especialidad, // Usar especialidad como título
-                'id_usuario' => $usuario->id_usuario,
-                'carga_horaria_max' => $request->carga_horaria_max,
                 'correo_institucional' => $request->email, // Usar email como correo institucional
+                'carga_horaria_max' => $request->carga_horaria_max,
+                'id_usuario' => $usuario->id_usuario,
             ]);
+
+            \Log::info('Docente creado correctamente', ['codigo_doc' => $docente->codigo_doc]);
 
             \DB::commit();
 
@@ -230,106 +199,67 @@ class DocenteController extends Controller
     }
 
     /**
+     * CU5: Gestionar Docentes - Actualizar
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            // Datos de persona
+            'ci' => 'required|string|max:20|unique:persona,ci,' . $id . ',id_persona',
+            'nombre_completo' => 'required|string|max:200',
+            'fecha_nacimiento' => 'nullable|date',
+            'sexo' => 'nullable|in:M,F',
+            'telefono' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:100',
+            'direccion' => 'nullable|string|max:255',
+            // Datos de docente
+            'especialidad' => 'nullable|string|max:100',
+            'carga_horaria_max' => 'required|integer|min:1',
+            'estado' => 'required|in:A,I',
+        ]);
+
         try {
-            $query = Docente::with(['usuario.persona', 'usuario.rol', 'asignaciones.grupo.materia']);
-            // Sin filtro por rol, devolver todos los docentes para cualquier usuario autenticado
+            \DB::beginTransaction();
 
-            // Búsqueda por término
-            if ($request->search) {
-                $search = $request->search;
-                $query->whereHas('usuario.persona', function ($q) use ($search) {
-                    $q->where('nombre', 'ILIKE', "%{$search}%")
-                      ->orWhere('ci', 'ILIKE', "%{$search}%");
-                })->orWhere('titulo', 'ILIKE', "%{$search}%");
-            }
+            $docente = Docente::findOrFail($id);
+            $persona = $docente->usuario->persona;
 
-            // Búsqueda por título
-            if ($request->titulo) {
-                $query->where('titulo', 'ILIKE', "%{$request->titulo}%");
-            }
-
-            $docentes = $query->paginate($request->per_page ?? 1000); // Aumentar el límite para combos
-
-            \Log::info('DocenteController@index - Docentes encontrados', [
-                'total' => $docentes->total(),
-                'ids' => $docentes->pluck('codigo_doc')->toArray(),
+            // Actualizar persona
+            $persona->update([
+                'ci' => $request->ci,
+                'nombre' => $request->nombre_completo,
+                'apellido_paterno' => '',
+                'apellido_materno' => '',
+                'fecha_nacimiento' => $request->fecha_nacimiento,
+                'sexo' => $request->sexo ?? 'M',
+                'telefono' => $request->telefono,
+                'email' => $request->email,
+                'direccion' => $request->direccion,
             ]);
 
-            // Transformar los datos para incluir las relaciones en la respuesta JSON
-            $data = $docentes->map(function ($docente) {
-                // Obtener nombre completo (Nombre + Apellido Paterno + Apellido Materno)
-                $nombreCompleto = 'Desconocido';
-                if ($docente->usuario && $docente->usuario->persona) {
-                    $persona = $docente->usuario->persona;
-                    $nombre = trim($persona->nombre ?? '');
-                    $apellidoPaterno = trim($persona->apellido_paterno ?? '');
-                    $apellidoMaterno = trim($persona->apellido_materno ?? '');
-                    // Construir: Nombre Apellido_Paterno Apellido_Materno
-                    $parts = array_filter([$nombre, $apellidoPaterno, $apellidoMaterno]);
-                    $nombreCompleto = !empty($parts) ? implode(' ', $parts) : 'Desconocido';
-                }
+            \Log::info('Persona actualizada correctamente', ['ci' => $persona->ci]);
 
-                // Obtener materias asignadas (sin duplicados)
-                $materias = [];
-                try {
-                    if ($docente->asignaciones && count($docente->asignaciones) > 0) {
-                        $materiasCollection = collect($docente->asignaciones)
-                            ->pluck('grupo.materia.nombre_mat')
-                            ->filter()
-                            ->unique()
-                            ->values();
-                        $materias = $materiasCollection->toArray();
-                    }
-                } catch (\Exception $e) {
-                    // Si hay error al obtener materias, continuar sin ellas
-                    $materias = [];
-                }
+            // Actualizar docente
+            $docente->update([
+                'titulo' => $request->especialidad,
+                'correo_institucional' => $request->email,
+                'carga_horaria_max' => $request->carga_horaria_max,
+                'estado' => $request->estado === 'A' ? true : false,
+            ]);
 
-                return [
-                    'codigo_doc' => $docente->codigo_doc,
-                    'titulo' => $docente->titulo,
-                    'correo_institucional' => $docente->correo_institucional,
-                    'carga_horaria_max' => $docente->carga_horaria_max,
-                    'id_usuario' => $docente->id_usuario,
-                    'nombre_completo' => $nombreCompleto,
-                    'nombre_docente' => $nombreCompleto,
-                    'materias' => $materias,
-                    'usuario' => $docente->usuario ? [
-                        'id_usuario' => $docente->usuario->id_usuario,
-                        'estado' => $docente->usuario->estado,
-                        'ci_persona' => $docente->usuario->ci_persona,
-                        'id_rol' => $docente->usuario->id_rol,
-                        'persona' => $docente->usuario->persona ? [
-                            'ci' => $docente->usuario->persona->ci,
-                            'nombre_completo' => $docente->usuario->persona->nombre_completo,
-                            'apellido' => $docente->usuario->persona->apellido,
-                            'nombre' => $docente->usuario->persona->nombre,
-                        ] : null,
-                    ] : null,
-                ];
-            });
+            \Log::info('Docente actualizado correctamente', ['codigo_doc' => $docente->codigo_doc]);
+
+            \DB::commit();
+
+            Bitacora::registrar('Gestión de Docentes', "Docente actualizado: {$persona->nombre}");
 
             return response()->json([
-                'data' => $data,
-                'meta' => [
-                    'current_page' => $docentes->currentPage(),
-                    'from' => $docentes->firstItem(),
-                    'last_page' => $docentes->lastPage(),
-                    'per_page' => $docentes->perPage(),
-                    'to' => $docentes->lastItem(),
-                    'total' => $docentes->total(),
-                ],
-                'links' => [
-                    'first' => $docentes->url(1),
-                    'last' => $docentes->url($docentes->lastPage()),
-                    'prev' => $docentes->previousPageUrl(),
-                    'next' => $docentes->nextPageUrl(),
-                ],
+                'message' => 'Docente actualizado exitosamente',
+                'docente' => $docente->load('usuario.persona'),
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error en DocenteController@index: ' . $e->getMessage());
-            return response()->json(['error' => 'No se pudieron obtener los docentes'], 500);
-        }
+            \DB::rollBack();
+            \Log::error('Error al actualizar docente: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Error al actualizar docente: ' . $e->getMessage(),
             ], 422);
