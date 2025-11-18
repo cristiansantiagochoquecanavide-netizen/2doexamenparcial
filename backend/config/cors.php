@@ -20,6 +20,7 @@ return [
 
     'allowed_origins' => [
         'https://exam-2-si-1.vercel.app',
+        'https://exam-2-si-1-jasb.vercel.app',
         'http://localhost:5173',
     ],
 

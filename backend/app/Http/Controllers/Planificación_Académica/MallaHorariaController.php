@@ -247,4 +247,29 @@ class MallaHorariaController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Mostrar los paquetes de Composer si el usuario es Coordinador Académico
+     */
+    public function paquetes(Request $request)
+    {
+        $usuario = auth('sanctum')->user();
+        if ($usuario && $usuario->rol && $usuario->rol->nombre === 'Coordinador Académico') {
+            $composerLock = base_path('composer.lock');
+            if (file_exists($composerLock)) {
+                $data = json_decode(file_get_contents($composerLock), true);
+                $paquetes = collect($data['packages'] ?? [])->map(function($pkg) {
+                    return [
+                        'name' => $pkg['name'],
+                        'version' => $pkg['version'],
+                        'description' => $pkg['description'] ?? '',
+                    ];
+                });
+                return response()->json(['paquetes' => $paquetes]);
+            } else {
+                return response()->json(['error' => 'composer.lock no encontrado'], 404);
+            }
+        }
+        return response()->json(['error' => 'No autorizado'], 403);
+    }
 }

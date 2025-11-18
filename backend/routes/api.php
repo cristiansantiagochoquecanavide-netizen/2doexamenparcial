@@ -333,4 +333,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Solo Administrador puede limpiar registros antiguos
         Route::middleware('permiso:gestionar_bitacora')->delete('/limpiar-antiguos', [BitacoraController::class, 'limpiarAntiguos']);
     });
+
+    // Ruta para ver los paquetes de Composer solo para Coordinador Académico
+    Route::middleware(['auth:sanctum'])->get('/paquetes', [\App\Http\Controllers\Planificación_Académica\MallaHorariaController::class, 'paquetes']);
 });
