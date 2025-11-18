@@ -92,8 +92,9 @@ class MallaHorariaController extends Controller
             $diasSemana = $request->dias_semana;
 
             // Limpiar datos previos respetando dependencias (asignaciones -> horarios)
-            AsignacionHorario::query()->delete();
-            Horario::query()->delete();
+            $schema = config('database.connections.pgsql.schema', 'public');
+            DB::statement("TRUNCATE TABLE {$schema}.asignacion_horario RESTART IDENTITY CASCADE");
+            DB::statement("TRUNCATE TABLE {$schema}.horario RESTART IDENTITY CASCADE");
 
             $horariosCreados = 0;
 
