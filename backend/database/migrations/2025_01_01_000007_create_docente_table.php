@@ -27,7 +27,7 @@ return new class extends Migration
         });
         
         // Agregar constraint CHECK usando DB::statement
-        DB::statement('ALTER TABLE carga_horaria.docente ADD CONSTRAINT chk_carga_horaria_positiva CHECK (carga_horaria_max >= 0)');
+        DB::statement('ALTER TABLE docente ADD CONSTRAINT chk_carga_horaria_positiva CHECK (carga_horaria_max >= 0)');
     }
 
     /**

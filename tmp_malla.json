@@ -1,0 +1,1 @@
+{"turnos":[{"nombre":"M","hora_inicio":"06:00","hora_fin":"12:00","duracion_bloque_minutos":60},{"nombre":"T","hora_inicio":"13:00","hora_fin":"19:00","duracion_bloque_minutos":60}],"dias_semana":[1,2,3,4,5]}

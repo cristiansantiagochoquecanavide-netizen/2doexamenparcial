@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         // Tabla de permisos
-        if (!Schema::hasTable('carga_horaria.permiso')) {
-            Schema::create('carga_horaria.permiso', function (Blueprint $table) {
+        if (!Schema::hasTable('permiso')) {
+            Schema::create('permiso', function (Blueprint $table) {
                 $table->id('id_permiso');
                 $table->string('nombre', 100)->unique();
                 $table->string('descripcion', 255)->nullable();
@@ -23,8 +23,8 @@ return new class extends Migration
         }
 
         // Tabla de relación rol-permiso
-        if (!Schema::hasTable('carga_horaria.rol_permiso')) {
-            Schema::create('carga_horaria.rol_permiso', function (Blueprint $table) {
+        if (!Schema::hasTable('rol_permiso')) {
+            Schema::create('rol_permiso', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('id_rol');
                 $table->unsignedBigInteger('id_permiso');
@@ -32,12 +32,12 @@ return new class extends Migration
                 
                 $table->foreign('id_rol')
                     ->references('id_rol')
-                    ->on('carga_horaria.rol')
+                    ->on('rol')
                     ->onDelete('cascade');
                 
                 $table->foreign('id_permiso')
                     ->references('id_permiso')
-                    ->on('carga_horaria.permiso')
+                    ->on('permiso')
                     ->onDelete('cascade');
                 
                 $table->unique(['id_rol', 'id_permiso']);
@@ -50,7 +50,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('carga_horaria.rol_permiso');
-        Schema::dropIfExists('carga_horaria.permiso');
+        Schema::dropIfExists('rol_permiso');
+        Schema::dropIfExists('permiso');
     }
 };

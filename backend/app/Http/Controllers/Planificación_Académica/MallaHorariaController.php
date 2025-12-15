@@ -254,9 +254,16 @@ class MallaHorariaController extends Controller
     public function paquetes(Request $request)
     {
         $usuario = auth('sanctum')->user();
+        \Log::info('Acceso a /api/paquetes', [
+            'usuario_id' => $usuario ? $usuario->id : null,
+            'rol' => $usuario && $usuario->rol ? $usuario->rol->nombre : null
+        ]);
+
         if ($usuario && $usuario->rol && $usuario->rol->nombre === 'Coordinador Académico') {
             $composerLock = base_path('composer.lock');
+            \Log::info('Verificando existencia de composer.lock', ['path' => $composerLock]);
             if (file_exists($composerLock)) {
+                \Log::info('composer.lock encontrado');
                 $data = json_decode(file_get_contents($composerLock), true);
                 $paquetes = collect($data['packages'] ?? [])->map(function($pkg) {
                     return [
@@ -265,11 +272,17 @@ class MallaHorariaController extends Controller
                         'description' => $pkg['description'] ?? '',
                     ];
                 });
+                \Log::info('Paquetes obtenidos', ['total' => $paquetes->count()]);
                 return response()->json(['paquetes' => $paquetes]);
             } else {
+                \Log::warning('composer.lock no encontrado', ['path' => $composerLock]);
                 return response()->json(['error' => 'composer.lock no encontrado'], 404);
             }
         }
+        \Log::warning('Acceso no autorizado a /api/paquetes', [
+            'usuario_id' => $usuario ? $usuario->id : null,
+            'rol' => $usuario && $usuario->rol ? $usuario->rol->nombre : null
+        ]);
         return response()->json(['error' => 'No autorizado'], 403);
     }
 }

@@ -9,7 +9,7 @@ class Bitacora extends Model
 {
     use HasFactory;
 
-    protected $table = 'carga_horaria.bitacora';
+    protected $table = 'bitacora';
     protected $primaryKey = 'id_bit';
     public $timestamps = false;
     

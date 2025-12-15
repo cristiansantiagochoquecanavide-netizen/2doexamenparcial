@@ -1,0 +1,285 @@
+{
+  "_CRUD-CkuZW--w.css": {
+    "file": "assets/CRUD-CkuZW--w.css",
+    "src": "_CRUD-CkuZW--w.css"
+  },
+  "_GestionInasistencias-CgaoewnK.css": {
+    "file": "assets/GestionInasistencias-CgaoewnK.css",
+    "src": "_GestionInasistencias-CgaoewnK.css"
+  },
+  "_axios-vendor-R-lXtGyY.js": {
+    "file": "assets/axios-vendor-R-lXtGyY.js",
+    "name": "axios-vendor"
+  },
+  "_react-vendor-AZ7bSPkM.js": {
+    "file": "assets/react-vendor-AZ7bSPkM.js",
+    "name": "react-vendor"
+  },
+  "index.html": {
+    "file": "assets/index-FLdvt5S5.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "dynamicImports": [
+      "resources/js/pages/Dashboard.jsx",
+      "resources/js/pages/Usuarios.jsx",
+      "resources/js/pages/Roles.jsx",
+      "resources/js/pages/Docentes.jsx",
+      "resources/js/pages/Materias.jsx",
+      "resources/js/pages/Grupos.jsx",
+      "resources/js/pages/Aulas.jsx",
+      "resources/js/pages/Infraestructura.jsx",
+      "resources/js/pages/CargaHoraria.jsx",
+      "resources/js/pages/ConfiguracionMalla.jsx",
+      "resources/js/pages/Asistencias.jsx",
+      "resources/js/pages/GestionInasistencias.jsx",
+      "resources/js/pages/RegistroAsistencia.jsx",
+      "resources/js/pages/ConflictosHorario.jsx",
+      "resources/js/pages/planificacion/DisponibilidadAulas.jsx",
+      "resources/js/pages/monitoreo/Monitoreo.jsx",
+      "resources/js/pages/Bitacora.jsx"
+    ],
+    "css": [
+      "assets/index-DaKkMPLH.css"
+    ]
+  },
+  "resources/js/pages/Asistencias.jsx": {
+    "file": "assets/Asistencias-CV8vmVR2.js",
+    "name": "Asistencias",
+    "src": "resources/js/pages/Asistencias.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/Asistencias-DR_Q6Ooe.css",
+      "assets/CRUD-CkuZW--w.css",
+      "assets/GestionInasistencias-CgaoewnK.css"
+    ]
+  },
+  "resources/js/pages/Aulas.jsx": {
+    "file": "assets/Aulas-2jf680tQ.js",
+    "name": "Aulas",
+    "src": "resources/js/pages/Aulas.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CRUD-CkuZW--w.css"
+    ]
+  },
+  "resources/js/pages/Bitacora.jsx": {
+    "file": "assets/Bitacora-juHnm_zo.js",
+    "name": "Bitacora",
+    "src": "resources/js/pages/Bitacora.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/Bitacora-C0wO57KN.css"
+    ]
+  },
+  "resources/js/pages/CargaHoraria.jsx": {
+    "file": "assets/CargaHoraria-BBmaidU3.js",
+    "name": "CargaHoraria",
+    "src": "resources/js/pages/CargaHoraria.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CargaHoraria-spc3lDWT.css"
+    ]
+  },
+  "resources/js/pages/ConfiguracionMalla.jsx": {
+    "file": "assets/ConfiguracionMalla-DPvdHBhD.js",
+    "name": "ConfiguracionMalla",
+    "src": "resources/js/pages/ConfiguracionMalla.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CRUD-CkuZW--w.css"
+    ]
+  },
+  "resources/js/pages/ConflictosHorario.jsx": {
+    "file": "assets/ConflictosHorario-wRddZQl8.js",
+    "name": "ConflictosHorario",
+    "src": "resources/js/pages/ConflictosHorario.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/ConflictosHorario-NoBWFxQl.css"
+    ]
+  },
+  "resources/js/pages/Dashboard.jsx": {
+    "file": "assets/Dashboard-BikTzNEA.js",
+    "name": "Dashboard",
+    "src": "resources/js/pages/Dashboard.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/Dashboard-HIS2kHTT.css"
+    ]
+  },
+  "resources/js/pages/Docentes.jsx": {
+    "file": "assets/Docentes-1iknBhAj.js",
+    "name": "Docentes",
+    "src": "resources/js/pages/Docentes.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ]
+  },
+  "resources/js/pages/GestionInasistencias.jsx": {
+    "file": "assets/GestionInasistencias-BOJLJn0m.js",
+    "name": "GestionInasistencias",
+    "src": "resources/js/pages/GestionInasistencias.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/GestionInasistencias-CgaoewnK.css"
+    ]
+  },
+  "resources/js/pages/Grupos.jsx": {
+    "file": "assets/Grupos-CIqUNoff.js",
+    "name": "Grupos",
+    "src": "resources/js/pages/Grupos.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CRUD-CkuZW--w.css"
+    ]
+  },
+  "resources/js/pages/Infraestructura.jsx": {
+    "file": "assets/Infraestructura-BuOVjve0.js",
+    "name": "Infraestructura",
+    "src": "resources/js/pages/Infraestructura.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CRUD-CkuZW--w.css"
+    ]
+  },
+  "resources/js/pages/Materias.jsx": {
+    "file": "assets/Materias-hK46lEgZ.js",
+    "name": "Materias",
+    "src": "resources/js/pages/Materias.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CRUD-CkuZW--w.css"
+    ]
+  },
+  "resources/js/pages/RegistroAsistencia.jsx": {
+    "file": "assets/RegistroAsistencia-BtWGS5Xg.js",
+    "name": "RegistroAsistencia",
+    "src": "resources/js/pages/RegistroAsistencia.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/RegistroAsistencia-C7KQIOOB.css"
+    ]
+  },
+  "resources/js/pages/Roles.jsx": {
+    "file": "assets/Roles-tIgi_IyF.js",
+    "name": "Roles",
+    "src": "resources/js/pages/Roles.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/CRUD-CkuZW--w.css"
+    ]
+  },
+  "resources/js/pages/Usuarios.jsx": {
+    "file": "assets/Usuarios-OwgG9fuc.js",
+    "name": "Usuarios",
+    "src": "resources/js/pages/Usuarios.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ]
+  },
+  "resources/js/pages/monitoreo/Monitoreo.jsx": {
+    "file": "assets/Monitoreo-D0HXBiQ5.js",
+    "name": "Monitoreo",
+    "src": "resources/js/pages/monitoreo/Monitoreo.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "resources/js/pages/Dashboard.jsx",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/Monitoreo-D3Wl5PGT.css"
+    ]
+  },
+  "resources/js/pages/planificacion/DisponibilidadAulas.jsx": {
+    "file": "assets/DisponibilidadAulas-h_EAOdVo.js",
+    "name": "DisponibilidadAulas",
+    "src": "resources/js/pages/planificacion/DisponibilidadAulas.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_react-vendor-AZ7bSPkM.js",
+      "_axios-vendor-R-lXtGyY.js"
+    ],
+    "css": [
+      "assets/DisponibilidadAulas-BcTI1_eM.css"
+    ]
+  }
+}

@@ -13,11 +13,11 @@ return new class extends Migration
     public function up(): void
     {
         // Eliminar la restricción existente
-        DB::statement('ALTER TABLE carga_horaria.usuario DROP CONSTRAINT IF EXISTS usuario_ci_persona_foreign CASCADE');
+        DB::statement('ALTER TABLE usuario DROP CONSTRAINT IF EXISTS usuario_ci_persona_foreign CASCADE');
         
         // Recrear la restricción con DELETE CASCADE
-        DB::statement('ALTER TABLE carga_horaria.usuario ADD CONSTRAINT usuario_ci_persona_foreign 
-            FOREIGN KEY (ci_persona) REFERENCES carga_horaria.persona(ci) ON DELETE CASCADE');
+        DB::statement('ALTER TABLE usuario ADD CONSTRAINT usuario_ci_persona_foreign 
+            FOREIGN KEY (ci_persona) REFERENCES persona(ci) ON DELETE CASCADE');
     }
 
     /**
@@ -26,8 +26,8 @@ return new class extends Migration
     public function down(): void
     {
         // Si es necesario revertir
-        DB::statement('ALTER TABLE carga_horaria.usuario DROP CONSTRAINT IF EXISTS usuario_ci_persona_foreign');
-        DB::statement('ALTER TABLE carga_horaria.usuario ADD CONSTRAINT usuario_ci_persona_foreign 
-            FOREIGN KEY (ci_persona) REFERENCES carga_horaria.persona(ci)');
+        DB::statement('ALTER TABLE usuario DROP CONSTRAINT IF EXISTS usuario_ci_persona_foreign');
+        DB::statement('ALTER TABLE usuario ADD CONSTRAINT usuario_ci_persona_foreign 
+            FOREIGN KEY (ci_persona) REFERENCES persona(ci)');
     }
 };

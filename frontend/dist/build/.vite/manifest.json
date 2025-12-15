@@ -1,0 +1,11 @@
+{
+  "resources/js/app.jsx": {
+    "file": "assets/main-HrDvcEYA.js",
+    "name": "main",
+    "src": "resources/js/app.jsx",
+    "isEntry": true,
+    "css": [
+      "assets/main-Bs45-V2C.css"
+    ]
+  }
+}

@@ -20,9 +20,9 @@ return new class extends Migration
             $table->time('hora_fin');
             $table->string('turno', 20)->nullable();
         });
-        
-        // Agregar constraint CHECK usando DB::statement
-        DB::statement('ALTER TABLE carga_horaria.horario ADD CONSTRAINT chk_horario_valido CHECK (hora_fin > hora_inicio)');
+
+        // Agregar constraint CHECK sin schema explícito para compatibilidad multiplataforma
+        DB::statement('ALTER TABLE horario ADD CONSTRAINT chk_horario_valido CHECK (hora_fin > hora_inicio)');
     }
 
     /**

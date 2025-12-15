@@ -9,7 +9,7 @@ class Rol extends Model
 {
     use HasFactory;
 
-    protected $table = 'carga_horaria.rol';
+    protected $table = 'rol';
     protected $primaryKey = 'id_rol';
     public $timestamps = false;
 
@@ -33,7 +33,7 @@ class Rol extends Model
     {
         return $this->belongsToMany(
             Permiso::class,
-            'carga_horaria.rol_permiso',
+            'rol_permiso',
             'id_rol',
             'id_permiso',
             'id_rol',
@@ -47,8 +47,8 @@ class Rol extends Model
      */
     public function tienePermiso($nombrePermiso)
     {
-        return \DB::table('carga_horaria.rol_permiso as rp')
-            ->join('carga_horaria.permiso as p', 'rp.id_permiso', '=', 'p.id_permiso')
+        return \DB::table('rol_permiso as rp')
+            ->join('permiso as p', 'rp.id_permiso', '=', 'p.id_permiso')
             ->where('rp.id_rol', $this->id_rol)
             ->where('p.nombre', $nombrePermiso)
             ->exists();

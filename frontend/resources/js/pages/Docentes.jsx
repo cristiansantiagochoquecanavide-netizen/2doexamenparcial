@@ -199,7 +199,7 @@ function Docentes() {
                                         <h3 className="font-bold text-lg">
                                             {docente.nombre_completo || `${docente.usuario?.persona?.nombre} ${docente.usuario?.persona?.apellido_paterno}`}
                                         </h3>
-                                        <p className="text-sm opacity-90">CI: {docente.usuario?.persona?.ci}</p>
+                                        <p className="text-sm opacity-90">CI: {docente.ci || docente.usuario?.persona?.ci}</p>
                                         <p className="text-sm opacity-90">Código: {docente.codigo_doc}</p>
                                     </div>
                                 </div>
@@ -250,7 +250,8 @@ function Docentes() {
                                 )}
 
                                 <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                                    <button
+                                    {/* Estado oculto - solo mostrar botones de acciones */}
+                                    {/* <button
                                         onClick={() => handleToggleEstado(docente)}
                                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                             docente.usuario?.estado
@@ -259,9 +260,9 @@ function Docentes() {
                                         } transition duration-200`}
                                     >
                                         {docente.usuario?.estado ? 'Activo' : 'Inactivo'}
-                                    </button>
+                                    </button> */}
 
-                                    <div className="flex space-x-2">
+                                    <div className="flex space-x-2 ml-auto">
                                         <button
                                             onClick={() => handleEdit(docente)}
                                             className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"

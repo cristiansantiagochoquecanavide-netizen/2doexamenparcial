@@ -24,9 +24,11 @@ class AppServiceProvider extends ServiceProvider
             $schema = env('DB_SCHEMA');
 
             // Solo ejecutar si existe un nombre válido
-            if (!empty($schema)) {
+            if (!empty($schema) && $schema !== 'public') {
                 try {
-                    DB::statement("SET search_path TO {$schema}");
+                    DB::statement("SET search_path TO {$schema},public");
+                    // También configurar para nuevas conexiones
+                    config(['database.connections.pgsql.search_path' => $schema . ',public']);
                 } catch (\Exception $e) {
                     // Evitar romper la app en producción
                 }

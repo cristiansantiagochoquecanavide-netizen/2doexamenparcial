@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('carga_horaria.persona', function (Blueprint $table) {
+        Schema::table('persona', function (Blueprint $table) {
             // Agregar campos de apellidos si no existen
-            if (!Schema::hasColumn('carga_horaria.persona', 'apellido_paterno')) {
+            if (!Schema::hasColumn('persona', 'apellido_paterno')) {
                 $table->string('apellido_paterno', 100)->nullable()->after('nombre');
             }
-            if (!Schema::hasColumn('carga_horaria.persona', 'apellido_materno')) {
+            if (!Schema::hasColumn('persona', 'apellido_materno')) {
                 $table->string('apellido_materno', 100)->nullable()->after('apellido_paterno');
             }
         });
@@ -27,11 +27,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('carga_horaria.persona', function (Blueprint $table) {
-            if (Schema::hasColumn('carga_horaria.persona', 'apellido_paterno')) {
+        Schema::table('persona', function (Blueprint $table) {
+            if (Schema::hasColumn('persona', 'apellido_paterno')) {
                 $table->dropColumn('apellido_paterno');
             }
-            if (Schema::hasColumn('carga_horaria.persona', 'apellido_materno')) {
+            if (Schema::hasColumn('persona', 'apellido_materno')) {
                 $table->dropColumn('apellido_materno');
             }
         });
