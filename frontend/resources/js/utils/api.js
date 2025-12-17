@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+// Determinar la URL de la API según el ambiente
+const getApiUrl = () => {
+    // Si estamos en producción, usar la variable de entorno VITE_API_URL
+    const apiUrl = import.meta.env.VITE_API_URL;
+    console.log('API URL configurada:', apiUrl);
+    return apiUrl;
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: getApiUrl(),
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
