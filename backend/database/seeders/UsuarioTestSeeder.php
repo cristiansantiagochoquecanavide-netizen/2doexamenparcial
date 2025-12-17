@@ -45,13 +45,12 @@ class UsuarioTestSeeder extends Seeder
                 ]);
             }
 
-            // Crear usuario
+            // Crear usuario (nota: la relación es a través de ci_persona, NO id_persona)
             $usuario = Usuario::create([
-                'ci_persona' => '12345678',
+                'ci_persona' => '12345678',  // Referencia a persona.ci
                 'contrasena' => Hash::make('12345678'),
                 'estado' => true,
-                'id_rol' => $rol->id_rol,
-                'id_persona' => $persona->id_persona
+                'id_rol' => $rol->id_rol
             ]);
 
             echo "✅ Usuario de prueba creado exitosamente\n";
