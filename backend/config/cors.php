@@ -21,6 +21,7 @@ return [
     'allowed_origins' => [
         'https://exam-2-si-1.vercel.app',
         'https://exam-2-si-1-jasb.vercel.app',
+        'https://2doexamenparcial-av.vercel.app',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8000',
         'https://2doexamenparcial-production.up.railway.app',
