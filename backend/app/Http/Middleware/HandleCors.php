@@ -14,6 +14,7 @@ class HandleCors
             'https://exam-2-si-1.vercel.app',
             'https://exam-2-si-1-jasb.vercel.app',
             'https://2doexamenparcial-av.vercel.app',
+            'https://2doexamenparcial-vercel.app',
             'https://2doexamenparcial-production.up.railway.app',
             'http://localhost:5173',
             'http://127.0.0.1:5173',
@@ -23,9 +24,12 @@ class HandleCors
             'http://127.0.0.1:8000',
         ];
 
+        // Permitir cualquier dominio de vercel.app
+        $isVercelDomain = $origin && strpos($origin, '.vercel.app') !== false;
+
         // Si es preflight (OPTIONS), responder inmediatamente
         if ($request->getMethod() === 'OPTIONS') {
-            if (in_array($origin, $allowedOrigins) || $origin === null) {
+            if (in_array($origin, $allowedOrigins) || $isVercelDomain) {
                 return response()
                     ->setStatusCode(204)
                     ->header('Access-Control-Allow-Origin', $origin ?? '*')
@@ -39,7 +43,7 @@ class HandleCors
         }
 
         // Para otros requests
-        if (in_array($origin, $allowedOrigins)) {
+        if (in_array($origin, $allowedOrigins) || $isVercelDomain) {
             $response = $next($request);
             
             return $response
