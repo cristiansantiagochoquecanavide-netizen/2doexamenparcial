@@ -14,6 +14,7 @@ class HandleCors
             'https://exam-2-si-1.vercel.app',
             'https://exam-2-si-1-jasb.vercel.app',
             'https://2doexamenparcial-av.vercel.app',
+            'https://2doexamenparcial-production.up.railway.app',
             'http://localhost:5173',
             'http://127.0.0.1:5173',
             'http://localhost:3000',
@@ -22,23 +23,32 @@ class HandleCors
             'http://127.0.0.1:8000',
         ];
 
-        if (in_array($origin, $allowedOrigins)) {
-            return $next($request)
-                ->header('Access-Control-Allow-Origin', $origin)
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-                ->header('Access-Control-Allow-Credentials', 'true')
-                ->header('Access-Control-Max-Age', '3600');
+        // Si es preflight (OPTIONS), responder inmediatamente
+        if ($request->getMethod() === 'OPTIONS') {
+            if (in_array($origin, $allowedOrigins) || $origin === null) {
+                return response()
+                    ->setStatusCode(204)
+                    ->header('Access-Control-Allow-Origin', $origin ?? '*')
+                    ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+                    ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
+                    ->header('Access-Control-Expose-Headers', 'Content-Length, X-JSON-Response-Code')
+                    ->header('Access-Control-Allow-Credentials', 'true')
+                    ->header('Access-Control-Max-Age', '86400');
+            }
+            return response()->setStatusCode(403);
         }
 
-        // Si es preflight (OPTIONS), responder directamente
-        if ($request->getMethod() === 'OPTIONS') {
-            return response()
+        // Para otros requests
+        if (in_array($origin, $allowedOrigins)) {
+            $response = $next($request);
+            
+            return $response
                 ->header('Access-Control-Allow-Origin', $origin)
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept')
+                ->header('Access-Control-Expose-Headers', 'Content-Length, X-JSON-Response-Code')
                 ->header('Access-Control-Allow-Credentials', 'true')
-                ->header('Access-Control-Max-Age', '3600');
+                ->header('Access-Control-Max-Age', '86400');
         }
 
         return $next($request);
