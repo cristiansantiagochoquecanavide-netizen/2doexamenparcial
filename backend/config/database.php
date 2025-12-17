@@ -95,11 +95,13 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => env('DB_SCHEMA', 'public'),
-            'sslmode' => env('DB_SSLMODE', 'require'),
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
             'options' => [
-                \PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 30),
+                \PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 60),
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_PERSISTENT => false,
             ],
+            'connect_timeout' => env('DB_CONNECT_TIMEOUT', 60),
         ],
 
 
