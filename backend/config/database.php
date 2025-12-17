@@ -94,10 +94,10 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => env('DB_SCHEMA', 'carga_horaria'),
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'search_path' => env('DB_SCHEMA', 'public'),
+            'sslmode' => env('DB_SSLMODE', 'require'),
             'options' => [
-                \PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 15), // aumentar tolerancia a latencia (Aiven/Railway)
+                \PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 30),
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
             ],
         ],
