@@ -20,7 +20,27 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \Illuminate\Http\Middleware\TrustProxies::class,
     ];
+
+    /**
+     * The trusted proxies for this application.
+     *
+     * @var array|string|null
+     */
+    protected $proxies = '*';
+
+    /**
+     * The headers that should be used to detect proxies.
+     *
+     * @var int
+     */
+    protected $headers =
+        \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
+        \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
+        \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
+        \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO |
+        \Illuminate\Http\Request::HEADER_X_FORWARDED_AWS_ELB;
 
     /**
      * The application's route middleware groups.
