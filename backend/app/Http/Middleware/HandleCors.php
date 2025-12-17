@@ -13,8 +13,8 @@ class HandleCors
         $allowedOrigins = [
             'https://exam-2-si-1.vercel.app',
             'https://exam-2-si-1-jasb.vercel.app',
+            'https://2doexamenparcial.vercel.app',
             'https://2doexamenparcial-av.vercel.app',
-            'https://2doexamenparcial-vercel.app',
             'https://2doexamenparcial-production.up.railway.app',
             'http://localhost:5173',
             'http://127.0.0.1:5173',
