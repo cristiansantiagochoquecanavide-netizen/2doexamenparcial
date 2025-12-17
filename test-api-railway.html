@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Railway</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #FF6B35;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #ff5722;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-online {
+            background: #28a745;
+            color: white;
+        }
+        .status-offline {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test API Backend Railway</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ Verificar Conectividad al Backend</h3>
+            <p>Chequea si el servidor de Railway está online</p>
+            <button onclick="testConnectivity()">Probar Conectividad</button>
+            <div id="connectivityResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2️⃣ Test de Login</h3>
+            <p>Intenta iniciar sesión con credenciales de prueba</p>
+            <label>CI (Cédula):</label>
+            <input type="text" id="loginCI" value="12345678">
+            <label>Contraseña:</label>
+            <input type="password" id="loginPassword" value="12345678">
+            <button onclick="testLogin()">Probar Login</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3️⃣ Información del Sistema</h3>
+            <button onclick="getSystemInfo()">Obtener Info del Sistema</button>
+            <div id="sysInfoResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4️⃣ Logs y Debugging</h3>
+            <p>Información útil para debugging</p>
+            <button onclick="showLogs()">Mostrar Logs</button>
+            <div id="logsResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://2doexamenparcial-production.up.railway.app';
+
+        function showResult(elementId, message, type) {
+            const elem = document.getElementById(elementId);
+            elem.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function testConnectivity() {
+            showResult('connectivityResult', '⏳ Probando conectividad...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/api/test`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                showResult('connectivityResult', 
+                    `✅ Servidor Online\n\nStatus: ${response.status}\nHeaders:\n${JSON.stringify([...response.headers.entries()], null, 2)}`,
+                    'success'
+                );
+            } catch (error) {
+                showResult('connectivityResult',
+                    `❌ Error de Conectividad\n\n${error.message}\n\nVerifica que:\n1. Railway está en línea\n2. La URL es correcta\n3. No hay problemas de CORS\n4. La base de datos está disponible`,
+                    'error'
+                );
+            }
+        }
+
+        async function testLogin() {
+            const ci = document.getElementById('loginCI').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!ci || !password) {
+                showResult('loginResult', '⚠️ Completa CI y contraseña', 'info');
+                return;
+            }
+
+            showResult('loginResult', '⏳ Intentando login...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ci_persona: ci,
+                        contrasena: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult('loginResult',
+                        `✅ Login Exitoso!\n\n${JSON.stringify(data, null, 2)}`,
+                        'success'
+                    );
+                } else {
+                    showResult('loginResult',
+                        `❌ Login Falló\n\nStatus: ${response.status}\n${JSON.stringify(data, null, 2)}\n\nPosibles causas:\n1. Usuario no existe\n2. Contraseña incorrecta\n3. Usuario inactivo\n4. Error en base de datos`,
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('loginResult',
+                    `❌ Error en Request\n\n${error.message}\n\nVerifica:\n1. La URL del API es correcta\n2. El servidor está en línea\n3. CORS está configurado correctamente`,
+                    'error'
+                );
+            }
+        }
+
+        async function getSystemInfo() {
+            showResult('sysInfoResult', '⏳ Obteniendo información...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/api/info`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('sysInfoResult',
+                        `✅ Info del Sistema:\n\n${JSON.stringify(data, null, 2)}`,
+                        'success'
+                    );
+                } else {
+                    showResult('sysInfoResult',
+                        `⚠️ Endpoint no disponible (Status ${response.status})\n\nEsto es normal si no existe el endpoint /api/info`,
+                        'info'
+                    );
+                }
+            } catch (error) {
+                showResult('sysInfoResult', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showLogs() {
+            const logs = `
+📋 INFORMACIÓN DE DEBUG:
+
+API URL: ${API_URL}
+Frontend URL: https://2doexamenparcial.vercel.app
+
+Variables del Navegador:
+- User Agent: ${navigator.userAgent}
+- Idioma: ${navigator.language}
+- Hora: ${new Date().toLocaleString()}
+
+Próximos pasos si hay errores:
+1. Verifica Deploy Logs en Railway Dashboard
+2. Busca mensajes de "release" phase
+3. Verifica si el seeder se ejecutó
+4. Confirma que la tabla usuario tiene registros
+
+Si ves 404:
+- El servidor probablemente no inicializó correctamente
+- Las rutas pueden no estar disponibles
+- La aplicación puede haber crasheado durante startup
+
+Si ves CORS error:
+- Verifica config/cors.php en el backend
+- Asegúrate que *.vercel.app está en allowed_origins
+
+Si ves timeout:
+- La BD de Railway puede estar offline
+- Problema de conexión a internet
+- Server respondiendo pero muy lento
+            `;
+            showResult('logsResult', logs, 'info');
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            console.log('🚀 Página cargada - Ejecutando tests automáticos');
+            testConnectivity();
+        });
+    </script>
+</body>
+</html>
