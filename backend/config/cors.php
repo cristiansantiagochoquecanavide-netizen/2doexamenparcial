@@ -23,7 +23,7 @@ return [
         'https://exam-2-si-1-jasb.vercel.app',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8000',
-        '2doexamenparcial-production.up.railway.app'
+        'https://2doexamenparcial-production.up.railway.app',
     ],
 
     'allowed_origins_patterns' => [],
