@@ -22,6 +22,12 @@ export default defineConfig({
                     'axios-vendor': ['axios']
                 }
             }
+        },
+        // Asegurar que las variables de entorno se incluyan en el build
+        define: {
+            'import.meta.env.VITE_API_URL': JSON.stringify(
+                process.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
+            ),
         }
     },
     
