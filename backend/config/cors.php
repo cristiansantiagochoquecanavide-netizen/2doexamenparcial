@@ -14,20 +14,23 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
+    'paths' => ['api/*', 'auth/*', 'sanctum/csrf-cookie', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
         'https://exam-2-si-1.vercel.app',
         'https://exam-2-si-1-jasb.vercel.app',
+        'https://2doexamenparcial.vercel.app',
         'https://2doexamenparcial-av.vercel.app',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8000',
         'https://2doexamenparcial-production.up.railway.app',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://.*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
