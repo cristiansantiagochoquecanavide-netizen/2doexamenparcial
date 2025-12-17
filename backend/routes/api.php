@@ -26,6 +26,34 @@ use App\Http\Controllers\Auditoria_y_Trazabilidad\BitacoraController;
 // ==========================================
 // RUTAS PÚBLICAS (sin autenticación)
 // ==========================================
+
+// Health check
+Route::get('/health', function () {
+    try {
+        // Test database connection
+        \DB::connection()->getPdo();
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now(),
+            'database' => 'connected',
+            'app_name' => config('app.name'),
+            'app_env' => config('app.env'),
+            'usuarios_count' => \App\Models\Usuario::count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'database' => 'disconnected'
+        ], 500);
+    }
+});
+
+// Test route - muy simple para verificar que el servidor está online
+Route::get('/test', function () {
+    return response()->json(['message' => 'Backend is online']);
+});
+
 Route::post('/auth/login', function (Request $request) {
     try {
         return (new AuthController())->login($request);

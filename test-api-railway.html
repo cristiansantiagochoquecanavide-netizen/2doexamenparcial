@@ -118,6 +118,7 @@
             <h3>1️⃣ Verificar Conectividad al Backend</h3>
             <p>Chequea si el servidor de Railway está online</p>
             <button onclick="testConnectivity()">Probar Conectividad</button>
+            <button onclick="testHealth()" style="background: #28a745; margin-left: 5px;">Verificar Salud del Sistema</button>
             <div id="connectivityResult"></div>
         </div>
 
@@ -169,6 +170,35 @@
             } catch (error) {
                 showResult('connectivityResult',
                     `❌ Error de Conectividad\n\n${error.message}\n\nVerifica que:\n1. Railway está en línea\n2. La URL es correcta\n3. No hay problemas de CORS\n4. La base de datos está disponible`,
+                    'error'
+                );
+            }
+        }
+
+        async function testHealth() {
+            showResult('connectivityResult', '⏳ Verificando salud del sistema...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/api/health`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('connectivityResult', 
+                        `✅ Sistema Saludable\n\n${JSON.stringify(data, null, 2)}`,
+                        'success'
+                    );
+                } else {
+                    showResult('connectivityResult',
+                        `⚠️ Problemas Detectados\n\n${JSON.stringify(data, null, 2)}`,
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('connectivityResult',
+                    `❌ Error\n\n${error.message}`,
                     'error'
                 );
             }
