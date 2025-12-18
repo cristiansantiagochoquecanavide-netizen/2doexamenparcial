@@ -95,10 +95,20 @@ if [ ! -f .env ]; then
     cp .env.example .env || true
 fi
 
+# Asegurar que APP_KEY está configurado
+if ! grep -q "^APP_KEY=" .env; then
+    echo "⚠️ APP_KEY no encontrado, usando placeholder..."
+    echo "APP_KEY=base64:PLACEHOLDER_KEY_WILL_BE_GENERATED" >> .env
+fi
+
 # Limpiar cachés antiguos antes de regenerarlos
 rm -rf bootstrap/cache/*.php storage/framework/cache/data/* 2>/dev/null || true
 
-php artisan key:generate --force || true
+# Generar APP_KEY solo si no existe o es placeholder
+if grep -q "PLACEHOLDER_KEY_WILL_BE_GENERATED" .env; then
+    echo "🔑 Generando APP_KEY..."
+    php artisan key:generate --force 2>/dev/null || echo "⚠️ No se pudo generar APP_KEY"
+fi
 
 # Esperar a que PostgreSQL esté disponible
 echo "⏳ Esperando a que PostgreSQL esté disponible..."
@@ -120,7 +130,7 @@ if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
 fi
 
 echo "📦 Ejecutando migraciones..."
-php artisan migrate --force --no-interaction || echo "⚠️ Las migraciones fallaron, continuando..."
+php artisan migrate --force --no-interaction 2>/dev/null || echo "⚠️ Las migraciones fallaron, continuando..."
 
 echo "👥 Ejecutando seeder..."
 php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction 2>/dev/null || echo "⚠️ El seeder falló, continuando..."
