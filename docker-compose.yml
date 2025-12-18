@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: appwebcargahoraria-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appwebcargahoraria
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Laravel Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: appwebcargahoraria-backend
+    environment:
+      APP_NAME: AppWebCargaHoraria
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:VPuXqWlyLax+DN2E/gda6wTVtlES3EkJJquGkv3HE1U=
+      APP_URL: http://localhost:8000
+      FRONTEND_URL: http://localhost:5173
+
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: appwebcargahoraria
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_SCHEMA: public
+      DB_SSLMODE: disable
+      DB_TIMEOUT: 60
+
+      CACHE_DRIVER: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stack
+      LOG_LEVEL: debug
+    ports:
+      - "8000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - app_storage:/app/storage
+    networks:
+      - app-network
+
+  # Frontend (Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: appwebcargahoraria-frontend
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+      VITE_APP_NAME: Carga Horaria
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  app_storage:
+
+networks:
+  app-network:
+    driver: bridge
