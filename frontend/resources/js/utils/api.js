@@ -2,8 +2,14 @@ import axios from 'axios';
 
 // Determinar la URL de la API según el ambiente
 const getApiUrl = () => {
-    // Si estamos en producción, usar la variable de entorno VITE_API_URL
-    const apiUrl = import.meta.env.VITE_API_URL;
+    // Usar configuración global si está disponible (cargada desde config.js)
+    if (window.APP_CONFIG && window.APP_CONFIG.API_URL) {
+        console.log('API URL desde config:', window.APP_CONFIG.API_URL);
+        return window.APP_CONFIG.API_URL;
+    }
+    
+    // Fallback a variable de entorno de Vite
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://twodoexamenparcial.onrender.com/api';
     console.log('API URL configurada:', apiUrl);
     return apiUrl;
 };
