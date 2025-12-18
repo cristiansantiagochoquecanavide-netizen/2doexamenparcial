@@ -29,8 +29,7 @@ class UsuarioTestSeeder extends Seeder
             // Crear persona
             $persona = Persona::create([
                 'ci' => '12345678',
-                'nombre' => 'Usuario',
-                'apellido' => 'Test',
+                'nombre' => 'Usuario Test',
                 'email' => 'test@example.com',
                 'telefono' => '12345678'
             ]);
