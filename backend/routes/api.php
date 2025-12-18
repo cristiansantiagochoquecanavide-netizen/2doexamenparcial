@@ -27,6 +27,15 @@ use App\Http\Controllers\Auditoria_y_Trazabilidad\BitacoraController;
 // RUTAS PÚBLICAS (sin autenticación)
 // ==========================================
 
+// Health check - simple, no database
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'API is running',
+        'timestamp' => now()
+    ]);
+});
+
 // Health check
 Route::get('/health', function () {
     try {
