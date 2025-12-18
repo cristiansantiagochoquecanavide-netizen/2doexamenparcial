@@ -28,6 +28,7 @@ return [
 
     'allowed_origins_patterns' => [
         '#^https://.*\.vercel\.app$#',
+        '#^https://.*\.onrender\.com$#', // Render domains
     ],
 
     'allowed_headers' => ['*'],
