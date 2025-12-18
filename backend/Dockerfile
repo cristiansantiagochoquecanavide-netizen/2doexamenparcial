@@ -91,26 +91,48 @@ set -e
 echo "🚀 Iniciando aplicación en Docker..."
 
 if [ ! -f .env ]; then
-    echo "Creating .env file..."
+    echo "Creating .env file from .env.example..."
     cp .env.example .env || true
 fi
 
-# Asegurar que APP_KEY está configurado
-if ! grep -q "^APP_KEY=" .env; then
-    echo "⚠️ APP_KEY no encontrado, usando placeholder..."
-    echo "APP_KEY=base64:PLACEHOLDER_KEY_WILL_BE_GENERATED" >> .env
+# Actualizar variables de entorno desde Render en el .env
+# Esto asegura que las variables configuradas en Render se usen en la aplicación
+echo "📝 Actualizando variables de entorno..."
+
+# Función para actualizar o agregar una variable en .env
+update_env() {
+    KEY=$1
+    VALUE=$2
+    if grep -q "^$KEY=" .env; then
+        sed -i "s|^$KEY=.*|$KEY=$VALUE|" .env
+    else
+        echo "$KEY=$VALUE" >> .env
+    fi
+}
+
+# Actualizar APP_KEY desde variable de entorno
+if [ -n "$APP_KEY" ]; then
+    update_env "APP_KEY" "$APP_KEY"
+    echo "✅ APP_KEY configurado desde Render"
 fi
 
-# Limpiar cachés antiguos antes de regenerarlos
-rm -rf bootstrap/cache/*.php storage/framework/cache/data/* 2>/dev/null || true
+# Actualizar variables de base de datos
+[ -n "$DB_HOST" ] && update_env "DB_HOST" "$DB_HOST"
+[ -n "$DB_PORT" ] && update_env "DB_PORT" "$DB_PORT"
+[ -n "$DB_DATABASE" ] && update_env "DB_DATABASE" "$DB_DATABASE"
+[ -n "$DB_USERNAME" ] && update_env "DB_USERNAME" "$DB_USERNAME"
+[ -n "$DB_PASSWORD" ] && update_env "DB_PASSWORD" "$DB_PASSWORD"
 
-# Generar APP_KEY solo si no existe o es placeholder
-if grep -q "PLACEHOLDER_KEY_WILL_BE_GENERATED" .env; then
+# Si APP_KEY sigue vacío, generar uno nuevo
+if ! grep -q "^APP_KEY=base64:" .env; then
     echo "🔑 Generando APP_KEY..."
     php artisan key:generate --force 2>/dev/null || echo "⚠️ No se pudo generar APP_KEY"
 fi
 
-# Caching rápido (no ejecuta migraciones)
+# Limpiar cachés antiguos
+rm -rf bootstrap/cache/*.php storage/framework/cache/data/* 2>/dev/null || true
+
+# Caching rápido
 echo "⚙️ Cacheando configuración..."
 php artisan config:cache 2>/dev/null || echo "⚠️ Config cache falló"
 php artisan route:cache 2>/dev/null || echo "⚠️ Route cache falló"
