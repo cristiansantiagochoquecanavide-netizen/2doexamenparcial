@@ -39,8 +39,7 @@ class UsuarioTestSeeder extends Seeder
             if (!$rol) {
                 $rol = Rol::create([
                     'nombre' => 'Administrador',
-                    'descripcion' => 'Administrador del sistema',
-                    'estado' => true
+                    'descripcion' => 'Administrador del sistema'
                 ]);
             }
 
