@@ -58,56 +58,62 @@ RUN mkdir -p storage/logs bootstrap/cache \
 COPY nginx.conf.docker /etc/nginx/http.d/default.conf
 
 # Copiar supervisord config
-RUN echo '[supervisord]\n\
-nodaemon=true\n\
-logfile=/var/log/supervisord.log\n\
-\n\
-[program:php-fpm]\n\
-command=php-fpm\n\
-autostart=true\n\
-autorestart=true\n\
-stderr_logfile=/var/log/php-fpm.err.log\n\
-stdout_logfile=/var/log/php-fpm.out.log\n\
-\n\
-[program:nginx]\n\
-command=nginx -g "daemon off;"\n\
-autostart=true\n\
-autorestart=true\n\
-stderr_logfile=/var/log/nginx.err.log\n\
-stdout_logfile=/var/log/nginx.out.log\n\
-' > /etc/supervisord.conf
+RUN cat > /etc/supervisord.conf << 'EOF'
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisord.log
+
+[program:php-fpm]
+command=php-fpm
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/php-fpm.err.log
+stdout_logfile=/var/log/php-fpm.out.log
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/nginx.err.log
+stdout_logfile=/var/log/nginx.out.log
+EOF
+
 
 # Script de inicialización
-RUN echo '#!/bin/sh\n\
-set -e\n\
-\n\
-echo "🚀 Iniciando aplicación en Docker..."\n\
-\n\
-if [ ! -f .env ]; then\n\
-    echo "Creating .env file..."\n\
-    cp .env.example .env || true\n\
-fi\n\
-\n\
-php artisan key:generate --force || true\n\
-\n\
-echo "📦 Ejecutando migraciones..."\n\
-php artisan migrate --force --no-interaction\n\
-\n\
-echo "👥 Ejecutando seeder..."\n\
-php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction || true\n\
-\n\
-echo "⚙️ Cacheando configuración..."\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
-\n\
-echo "✅ Inicialización completada"\n\
-echo "🌐 Iniciando servidor..."\n\
-\n\
-exec supervisord -c /etc/supervisord.conf\n\
-' > /entrypoint.sh && chmod +x /entrypoint.sh
+RUN cat > /entrypoint.sh << 'EOF'
+#!/bin/sh
+set -e
+
+echo "🚀 Iniciando aplicación en Docker..."
+
+if [ ! -f .env ]; then
+    echo "Creating .env file..."
+    cp .env.example .env || true
+fi
+
+php artisan key:generate --force || true
+
+echo "📦 Ejecutando migraciones..."
+php artisan migrate --force --no-interaction
+
+echo "👥 Ejecutando seeder..."
+php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction || true
+
+echo "⚙️ Cacheando configuración..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+echo "✅ Inicialización completada"
+echo "🌐 Iniciando servidor..."
+
+exec supervisord -c /etc/supervisord.conf
+EOF
+chmod +x /entrypoint.sh
 
 EXPOSE 8080
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 ENTRYPOINT ["/entrypoint.sh"]
 
