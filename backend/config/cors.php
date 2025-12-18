@@ -22,12 +22,16 @@ return [
         'https://127.0.0.1:5173',
         'https://twodoexamenparcial.onrender.com',
         'https://twodoexamenparcial-1.onrender.com',
+        'https://2doexamenparcial.vercel.app',
         'https://127.0.0.1:8000',
+        'http://localhost:5173',
+        'http://localhost:3000',
     ],
 
     'allowed_origins_patterns' => [
         '#^https://.*\.vercel\.app$#',
-        '#^https://.*\.onrender\.com$#', // Render domains
+        '#^https://.*\.onrender\.com$#',
+        '#^https://.*-onrender\.com$#',
     ],
 
     'allowed_headers' => ['*'],
