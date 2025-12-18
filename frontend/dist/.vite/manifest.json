@@ -16,7 +16,7 @@
     "name": "react-vendor"
   },
   "index.html": {
-    "file": "assets/index-FLdvt5S5.js",
+    "file": "assets/index-ChjEM8xn.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -48,7 +48,7 @@
     ]
   },
   "resources/js/pages/Asistencias.jsx": {
-    "file": "assets/Asistencias-CV8vmVR2.js",
+    "file": "assets/Asistencias-CNd5wJjS.js",
     "name": "Asistencias",
     "src": "resources/js/pages/Asistencias.jsx",
     "isDynamicEntry": true,
@@ -64,7 +64,7 @@
     ]
   },
   "resources/js/pages/Aulas.jsx": {
-    "file": "assets/Aulas-2jf680tQ.js",
+    "file": "assets/Aulas-CojaWrEg.js",
     "name": "Aulas",
     "src": "resources/js/pages/Aulas.jsx",
     "isDynamicEntry": true,
@@ -78,7 +78,7 @@
     ]
   },
   "resources/js/pages/Bitacora.jsx": {
-    "file": "assets/Bitacora-juHnm_zo.js",
+    "file": "assets/Bitacora-Cxwh9Ipb.js",
     "name": "Bitacora",
     "src": "resources/js/pages/Bitacora.jsx",
     "isDynamicEntry": true,
@@ -92,7 +92,7 @@
     ]
   },
   "resources/js/pages/CargaHoraria.jsx": {
-    "file": "assets/CargaHoraria-BBmaidU3.js",
+    "file": "assets/CargaHoraria-D-JDbogy.js",
     "name": "CargaHoraria",
     "src": "resources/js/pages/CargaHoraria.jsx",
     "isDynamicEntry": true,
@@ -106,7 +106,7 @@
     ]
   },
   "resources/js/pages/ConfiguracionMalla.jsx": {
-    "file": "assets/ConfiguracionMalla-DPvdHBhD.js",
+    "file": "assets/ConfiguracionMalla-BIEAQ7iF.js",
     "name": "ConfiguracionMalla",
     "src": "resources/js/pages/ConfiguracionMalla.jsx",
     "isDynamicEntry": true,
@@ -120,7 +120,7 @@
     ]
   },
   "resources/js/pages/ConflictosHorario.jsx": {
-    "file": "assets/ConflictosHorario-wRddZQl8.js",
+    "file": "assets/ConflictosHorario-D4ts7k_z.js",
     "name": "ConflictosHorario",
     "src": "resources/js/pages/ConflictosHorario.jsx",
     "isDynamicEntry": true,
@@ -134,7 +134,7 @@
     ]
   },
   "resources/js/pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-BikTzNEA.js",
+    "file": "assets/Dashboard-zCTsYTbp.js",
     "name": "Dashboard",
     "src": "resources/js/pages/Dashboard.jsx",
     "isDynamicEntry": true,
@@ -148,7 +148,7 @@
     ]
   },
   "resources/js/pages/Docentes.jsx": {
-    "file": "assets/Docentes-1iknBhAj.js",
+    "file": "assets/Docentes-BjGyH2WP.js",
     "name": "Docentes",
     "src": "resources/js/pages/Docentes.jsx",
     "isDynamicEntry": true,
@@ -159,7 +159,7 @@
     ]
   },
   "resources/js/pages/GestionInasistencias.jsx": {
-    "file": "assets/GestionInasistencias-BOJLJn0m.js",
+    "file": "assets/GestionInasistencias-C3VNWxjU.js",
     "name": "GestionInasistencias",
     "src": "resources/js/pages/GestionInasistencias.jsx",
     "isDynamicEntry": true,
@@ -173,7 +173,7 @@
     ]
   },
   "resources/js/pages/Grupos.jsx": {
-    "file": "assets/Grupos-CIqUNoff.js",
+    "file": "assets/Grupos-DmPcsrQh.js",
     "name": "Grupos",
     "src": "resources/js/pages/Grupos.jsx",
     "isDynamicEntry": true,
@@ -187,7 +187,7 @@
     ]
   },
   "resources/js/pages/Infraestructura.jsx": {
-    "file": "assets/Infraestructura-BuOVjve0.js",
+    "file": "assets/Infraestructura-CDcYfHAr.js",
     "name": "Infraestructura",
     "src": "resources/js/pages/Infraestructura.jsx",
     "isDynamicEntry": true,
@@ -201,7 +201,7 @@
     ]
   },
   "resources/js/pages/Materias.jsx": {
-    "file": "assets/Materias-hK46lEgZ.js",
+    "file": "assets/Materias-BABTasf8.js",
     "name": "Materias",
     "src": "resources/js/pages/Materias.jsx",
     "isDynamicEntry": true,
@@ -215,7 +215,7 @@
     ]
   },
   "resources/js/pages/RegistroAsistencia.jsx": {
-    "file": "assets/RegistroAsistencia-BtWGS5Xg.js",
+    "file": "assets/RegistroAsistencia-DmmAYFXZ.js",
     "name": "RegistroAsistencia",
     "src": "resources/js/pages/RegistroAsistencia.jsx",
     "isDynamicEntry": true,
@@ -229,7 +229,7 @@
     ]
   },
   "resources/js/pages/Roles.jsx": {
-    "file": "assets/Roles-tIgi_IyF.js",
+    "file": "assets/Roles-DuGPRn9Z.js",
     "name": "Roles",
     "src": "resources/js/pages/Roles.jsx",
     "isDynamicEntry": true,
@@ -243,7 +243,7 @@
     ]
   },
   "resources/js/pages/Usuarios.jsx": {
-    "file": "assets/Usuarios-OwgG9fuc.js",
+    "file": "assets/Usuarios-7NoAvg2p.js",
     "name": "Usuarios",
     "src": "resources/js/pages/Usuarios.jsx",
     "isDynamicEntry": true,
@@ -254,7 +254,7 @@
     ]
   },
   "resources/js/pages/monitoreo/Monitoreo.jsx": {
-    "file": "assets/Monitoreo-D0HXBiQ5.js",
+    "file": "assets/Monitoreo-CjRydLIT.js",
     "name": "Monitoreo",
     "src": "resources/js/pages/monitoreo/Monitoreo.jsx",
     "isDynamicEntry": true,
@@ -269,7 +269,7 @@
     ]
   },
   "resources/js/pages/planificacion/DisponibilidadAulas.jsx": {
-    "file": "assets/DisponibilidadAulas-h_EAOdVo.js",
+    "file": "assets/DisponibilidadAulas-D5K9HE9B.js",
     "name": "DisponibilidadAulas",
     "src": "resources/js/pages/planificacion/DisponibilidadAulas.jsx",
     "isDynamicEntry": true,
