@@ -19,11 +19,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://2doexamenparcial.vercel.app',
-        'https://2doexamenparcial-av.vercel.app',
         'https://127.0.0.1:5173',
         'https://127.0.0.1:8000',
-        'https://2doexamenparcial-production.up.railway.app',
     ],
 
     'allowed_origins_patterns' => [
