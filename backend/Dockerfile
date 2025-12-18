@@ -47,6 +47,9 @@ WORKDIR /app
 # Copiar dependencias desde builder
 COPY --from=builder /app/vendor ./vendor
 
+# Copiar .env.example PRIMERO para que esté disponible
+COPY .env.example .env.example
+
 # Copiar aplicación
 COPY . .
 
@@ -97,16 +100,35 @@ rm -rf bootstrap/cache/*.php storage/framework/cache/data/* 2>/dev/null || true
 
 php artisan key:generate --force || true
 
+# Esperar a que PostgreSQL esté disponible
+echo "⏳ Esperando a que PostgreSQL esté disponible..."
+MAX_ATTEMPTS=30
+ATTEMPT=0
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+    if php artisan migrate:status > /dev/null 2>&1; then
+        echo "✅ PostgreSQL está disponible"
+        break
+    fi
+    ATTEMPT=$((ATTEMPT + 1))
+    echo "Intento $ATTEMPT/$MAX_ATTEMPTS - Esperando PostgreSQL..."
+    sleep 2
+done
+
+if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+    echo "⚠️ PostgreSQL no está disponible después de $MAX_ATTEMPTS intentos"
+    echo "⚠️ Continuando de todas formas..."
+fi
+
 echo "📦 Ejecutando migraciones..."
-php artisan migrate --force --no-interaction
+php artisan migrate --force --no-interaction || echo "⚠️ Las migraciones fallaron, continuando..."
 
 echo "👥 Ejecutando seeder..."
-php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction || true
+php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction 2>/dev/null || echo "⚠️ El seeder falló, continuando..."
 
 echo "⚙️ Cacheando configuración..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache 2>/dev/null || echo "⚠️ Config cache falló"
+php artisan route:cache 2>/dev/null || echo "⚠️ Route cache falló"
+php artisan view:cache 2>/dev/null || echo "⚠️ View cache falló"
 
 echo "✅ Inicialización completada"
 echo "🌐 Iniciando servidor..."
