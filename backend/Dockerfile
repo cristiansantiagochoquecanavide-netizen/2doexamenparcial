@@ -110,38 +110,29 @@ if grep -q "PLACEHOLDER_KEY_WILL_BE_GENERATED" .env; then
     php artisan key:generate --force 2>/dev/null || echo "⚠️ No se pudo generar APP_KEY"
 fi
 
-# Esperar a que PostgreSQL esté disponible
-echo "⏳ Esperando a que PostgreSQL esté disponible..."
-MAX_ATTEMPTS=30
-ATTEMPT=0
-while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    if php artisan migrate:status > /dev/null 2>&1; then
-        echo "✅ PostgreSQL está disponible"
-        break
-    fi
-    ATTEMPT=$((ATTEMPT + 1))
-    echo "Intento $ATTEMPT/$MAX_ATTEMPTS - Esperando PostgreSQL..."
-    sleep 2
-done
-
-if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-    echo "⚠️ PostgreSQL no está disponible después de $MAX_ATTEMPTS intentos"
-    echo "⚠️ Continuando de todas formas..."
-fi
-
-echo "📦 Ejecutando migraciones..."
-php artisan migrate --force --no-interaction 2>/dev/null || echo "⚠️ Las migraciones fallaron, continuando..."
-
-echo "👥 Ejecutando seeder..."
-php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction 2>/dev/null || echo "⚠️ El seeder falló, continuando..."
-
+# Caching rápido (no ejecuta migraciones)
 echo "⚙️ Cacheando configuración..."
 php artisan config:cache 2>/dev/null || echo "⚠️ Config cache falló"
 php artisan route:cache 2>/dev/null || echo "⚠️ Route cache falló"
 php artisan view:cache 2>/dev/null || echo "⚠️ View cache falló"
 
-echo "✅ Inicialización completada"
+echo "✅ Inicialización rápida completada"
 echo "🌐 Iniciando servidor..."
+
+# Ejecutar migraciones y seeder en background (no bloquea el servidor)
+(
+    sleep 5  # Esperar a que el servidor esté listo
+    echo ""
+    echo "📦 Ejecutando migraciones en background..."
+    php artisan migrate --force --no-interaction 2>/dev/null || echo "⚠️ Las migraciones fallaron"
+    
+    echo "👥 Ejecutando seeder en background..."
+    php artisan db:seed --class=UsuarioTestSeeder --force --no-interaction 2>/dev/null || echo "⚠️ El seeder falló"
+    
+    echo "✅ Migraciones y seeder completadas"
+) &
+
+exec supervisord -c /etc/supervisord.conf
 
 exec supervisord -c /etc/supervisord.conf
 EOF
