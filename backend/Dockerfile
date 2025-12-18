@@ -50,8 +50,9 @@ COPY --from=builder /app/vendor ./vendor
 # Copiar aplicación
 COPY . .
 
-# Crear directorios necesarios
-RUN mkdir -p storage/logs bootstrap/cache \
+# Limpiar cachés de bootstrap (contienen referencias a proveedores que pueden no estar disponibles)
+RUN rm -rf bootstrap/cache/* \
+    && mkdir -p storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # Copiar configuración de Nginx
@@ -90,6 +91,9 @@ if [ ! -f .env ]; then
     echo "Creating .env file..."
     cp .env.example .env || true
 fi
+
+# Limpiar cachés antiguos antes de regenerarlos
+rm -rf bootstrap/cache/*.php storage/framework/cache/data/* 2>/dev/null || true
 
 php artisan key:generate --force || true
 
