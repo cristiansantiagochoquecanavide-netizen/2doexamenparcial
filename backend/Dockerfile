@@ -134,8 +134,15 @@ rm -rf bootstrap/cache/*.php storage/framework/cache/data/* 2>/dev/null || true
 
 # Caching rápido
 echo "⚙️ Cacheando configuración..."
+php artisan config:clear 2>/dev/null || true
 php artisan config:cache 2>/dev/null || echo "⚠️ Config cache falló"
+
+# Limpiar cache de rutas explícitamente
+php artisan route:clear 2>/dev/null || true
 php artisan route:cache 2>/dev/null || echo "⚠️ Route cache falló"
+
+# Limpiar cache de vistas
+php artisan view:clear 2>/dev/null || true
 php artisan view:cache 2>/dev/null || echo "⚠️ View cache falló"
 
 echo "✅ Inicialización rápida completada"
