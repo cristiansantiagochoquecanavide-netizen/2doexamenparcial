@@ -1,16 +1,19 @@
-# Build stage
+# Build stage - Instalar dependencias
 FROM composer:2.6 as builder
 
 WORKDIR /app
 
+# Copiar composer files
 COPY composer.json composer.lock ./
 
+# Instalar sin scripts (evita error de artisan)
 RUN composer install \
     --prefer-dist \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
-    --no-progress
+    --no-progress \
+    --no-scripts
 
 # Runtime stage
 FROM php:8.2-fpm-alpine
