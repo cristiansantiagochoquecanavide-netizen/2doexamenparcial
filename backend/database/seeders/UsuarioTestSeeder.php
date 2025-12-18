@@ -19,20 +19,28 @@ class UsuarioTestSeeder extends Seeder
     public function run(): void
     {
         try {
-            // Verificar si el usuario ya existe
+            // Verificar si la persona ya existe
+            $personaExistente = Persona::where('ci', '12345678')->first();
             $usuarioExistente = Usuario::where('ci_persona', '12345678')->first();
-            if ($usuarioExistente) {
+            
+            if ($personaExistente && $usuarioExistente) {
                 echo "✅ Usuario de prueba ya existe\n";
+                echo "   CI: 12345678\n";
+                echo "   Contraseña: 12345678\n";
                 return;
             }
 
-            // Crear persona
-            $persona = Persona::create([
-                'ci' => '12345678',
-                'nombre' => 'Usuario Test',
-                'email' => 'test@example.com',
-                'telefono' => '12345678'
-            ]);
+            // Crear persona si no existe
+            if (!$personaExistente) {
+                $persona = Persona::create([
+                    'ci' => '12345678',
+                    'nombre' => 'Usuario Test',
+                    'email' => 'test@example.com',
+                    'telefono' => '12345678'
+                ]);
+            } else {
+                $persona = $personaExistente;
+            }
 
             // Obtener o crear rol Administrador
             $rol = Rol::where('nombre', 'Administrador')->first();
@@ -43,15 +51,19 @@ class UsuarioTestSeeder extends Seeder
                 ]);
             }
 
-            // Crear usuario (nota: la relación es a través de ci_persona, NO id_persona)
-            $usuario = Usuario::create([
-                'ci_persona' => '12345678',  // Referencia a persona.ci
-                'contrasena' => Hash::make('12345678'),
-                'estado' => true,
-                'id_rol' => $rol->id_rol
-            ]);
-
-            echo "✅ Usuario de prueba creado exitosamente\n";
+            // Crear usuario si no existe
+            if (!$usuarioExistente) {
+                $usuario = Usuario::create([
+                    'ci_persona' => '12345678',
+                    'contrasena' => Hash::make('12345678'),
+                    'estado' => true,
+                    'id_rol' => $rol->id_rol
+                ]);
+                echo "✅ Usuario de prueba creado exitosamente\n";
+            } else {
+                echo "✅ Usuario de prueba ya existía\n";
+            }
+            
             echo "   CI: 12345678\n";
             echo "   Contraseña: 12345678\n";
         } catch (\Exception $e) {
