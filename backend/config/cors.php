@@ -21,6 +21,7 @@ return [
     'allowed_origins' => [
         'https://127.0.0.1:5173',
         'https://twodoexamenparcial.onrender.com',
+        'https://twodoexamenparcial-1.onrender.com',
         'https://127.0.0.1:8000',
     ],
 
